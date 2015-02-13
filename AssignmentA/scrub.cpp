@@ -32,8 +32,8 @@ struct Data{
     float price;
     int units;
 
-    Data(std::string _time, float _price, int _units){
-        time = _time;
+    Data(std::string time_, float _price, int _units){
+        time = time_;
         price = _price;
         units = _units;
     }
@@ -88,9 +88,18 @@ void ThreadFunction(int threadID) {
 
 int main(int argc, char *argv[])
 {
+
+    //open file
+    // read beginning data. and find medians.
+    // find valid starting date
+    // find valid volume
+    // find valid price
+    //read each line. put into data structure. check if data is good.
+
+
     TIMER_OBJ t0 = NOW;
     std::string filename = "data10k.txt";
-    std::string _time, _price_str, _units_str, old_time="";
+    std::string time_, price_str_, units_str_, old_time="";
     float _price;
     int _units;
     std::vector<Data> lines;
@@ -104,12 +113,12 @@ int main(int argc, char *argv[])
 
     // Figure out upper and lower bound.
     for (int i=0; i<TEST_SIZE; ++i){
-        if (!getline(infile, _time, ',')) break;
-        getline(infile, _price_str, ',');
-        _price = atof(_price_str.c_str());
-        getline(infile, _units_str);
-        _units = atoi(_units_str.c_str());
-        lines.push_back(Data(_time, _price, _units));
+        if (!getline(infile, time_, ',')) break;
+        getline(infile, price_str_, ',');
+        _price = atof(price_str_.c_str());
+        getline(infile, units_str_);
+        _units = atoi(units_str_.c_str());
+        lines.push_back(Data(time_, _price, _units));
     }
     std::sort(lines.begin(), lines.end(), compare_price);
     float q2, inter_quartile, lower_price_range, upper_price_range;
@@ -125,18 +134,18 @@ int main(int argc, char *argv[])
 
     // Read data and remove bad entries.
     while (!infile.eof()){
-        if (!getline(infile, _time, ',')) break;
-        //time_int = time_to_int(_time);
-        if (old_time =="") old_time = _time;
-        getline(infile, _price_str, ',');
-        _price = atof(_price_str.c_str());
-        getline(infile, _units_str);
-        _units = atoi(_units_str.c_str());
-        if (is_data_good(_time, _price, _units, lower_price_range, upper_price_range, old_time)){
-            lines.push_back(Data(_time, _price, _units));
-            old_time = _time;
+        if (!getline(infile, time_, ',')) break;
+        //time_int = time_to_int(time_);
+        if (old_time =="") old_time = time_;
+        getline(infile, price_str_, ',');
+        _price = atof(price_str_.c_str());
+        getline(infile, units_str_);
+        _units = atoi(units_str_.c_str());
+        if (is_data_good(time_, _price, _units, lower_price_range, upper_price_range, old_time)){
+            lines.push_back(Data(time_, _price, _units));
+            old_time = time_;
         }
-        //cout << _time << " " << _price << " " << _units << "\n";
+        //cout << time_ << " " << _price << " " << _units << "\n";
     }
 
     std::thread thread[NUM_THREADS];
