@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <iostream>
 
 size_t getFilesize(const char* filename) {
     struct stat st;
@@ -20,7 +21,13 @@ int main(int argc, char** argv) {
     void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
     assert(mmappedData != NULL);
     //Write the mmapped data to stdout (= FD #1)
-    write(1, mmappedData, filesize);
+    std::cout << mmappedData << "\n";
+    write(1, mmappedData, 2);
+    std::cout << "\n" << mmappedData << "\n";
+    void *buf;
+    ssize_t read(int fd, void *buf, size_t nbyte);
+    std::cout << buf << "\n";
+    //write(1, mmappedData, filesize);
     //Cleanup
     int rc = munmap(mmappedData, filesize);
     assert(rc == 0);
