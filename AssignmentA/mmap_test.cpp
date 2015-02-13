@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <assert.h>
 #include <iostream>
+#include <sstream>
 
 size_t getFilesize(const char* filename) {
     struct stat st;
@@ -33,4 +34,19 @@ int main(int argc, char** argv) {
     int rc = munmap(mmappedData, filesize);
     assert(rc == 0);
     close(fd);
+
+    char test[]={'a', 'b', 'c', '\0'};
+    char test2[]={'d', 'e', 'f', '\0'};
+    std::stringstream ss;
+    for (int i=0;i<3;++i){
+        ss << test[i];
+    }
+    std::cout << ss.str() << "\n";
+
+    ss.str(std::string());
+    for (int i=0;i<3;++i){
+        ss << test2[i];
+    }
+    std::cout << ss.str() << "\n";
+
 }

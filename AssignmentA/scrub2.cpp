@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <sstream>
 #include "tick.h"
 
 // Memory mapping headers.
@@ -28,53 +29,29 @@ int main(int argc, char *argv[])
     void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
     char* mapped = static_cast<char*>(mmappedData);
     assert(mmappedData != NULL);
-    //Write the mmapped data to stdout (= FD #1)
-    //std::cout << mmappedData << "\n";
-    //write(1, mmappedData, 2);
-    //std::cout << "\n" << mmappedData << "\n";
-    //void *buf;
-    //ssize_t read(int fd, void *buf, size_t nbyte);
-    int line_start = 0;
-    int line_end = line_start;
-    while (mapped[line_end] != '\n'){
-        std::cout << mapped[line_end];
-        ++line_end;
-    }
-    std::cout << "\n";
-    std::cout << line_end << "\n";
-    std::cout << mapped[line_end+1] << "\n";
-    //Cleanup
-    int rc = munmap(mmappedData, filesize);
-    assert(rc == 0);
-    close(fd);
 
+    int location = 0;
+    std::stringstream ss;
 
-    std::ifstream infile;
-    //std::string filename = argv[1];
-    const char * filename = "data10k.txt";
-    infile.open(filename);
-    std::string test_str;
-
-    //Need to process start data
-
-    int num;
-
-    for (int i=0; i<10000; i++){
-        getline(infile, test_str);
-        Tick test(test_str);
-        //std::cout << test_str << "  ";
-
-        if (num=test.check_data()){
-            //std::cout << test_str << "  " << "bad " << num << " " << test.start_time << "\n";
+    while (mapped[location] != '\0'){
+        while (mapped[location] != '\n'){
+            if (mapped[location] == '\0') break;
+            ss << mapped[location];
+            ++location;
         }
+        std::string test_str = ss.str();
+        Tick test(test_str);
+        test.check_data();
+        ss.str(std::string());
+        ++location;
     }
     std::cout << "\ncounter: " << Tick::counter << "\nbad_counter: " << Tick::bad_counter << "\n";
 
 
-    //test.print();
-
-
-    infile.close();
+    //Cleanup
+    int rc = munmap(mmappedData, filesize);
+    assert(rc == 0);
+    close(fd);
 
     return 0;
 }
