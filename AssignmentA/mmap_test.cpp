@@ -19,14 +19,15 @@ int main(int argc, char** argv) {
     assert(fd != -1);
     //Execute mmap
     void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+    char* mapped = static_cast<char*>(mmappedData);
     assert(mmappedData != NULL);
     //Write the mmapped data to stdout (= FD #1)
-    std::cout << mmappedData << "\n";
-    write(1, mmappedData, 2);
-    std::cout << "\n" << mmappedData << "\n";
-    void *buf;
-    ssize_t read(int fd, void *buf, size_t nbyte);
-    std::cout << buf << "\n";
+    //std::cout << mmappedData << "\n";
+    //write(1, mmappedData, 2);
+    //std::cout << "\n" << mmappedData << "\n";
+    //void *buf;
+    //ssize_t read(int fd, void *buf, size_t nbyte);
+    std::cout << mapped[0] << "\n";
     //write(1, mmappedData, filesize);
     //Cleanup
     int rc = munmap(mmappedData, filesize);
