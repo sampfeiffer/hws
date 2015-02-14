@@ -1,13 +1,13 @@
 CPPFLAGS = -O3 -std=c++11 -pthread
 GCC = g++
 all: scrub normal
-scrub: scrub2.cpp
-	$(GCC) $(CPPFLAGS) scrub2.cpp -o scrub2.out
+scrub: scrub.cpp
+	$(GCC) $(CPPFLAGS) scrub.cpp -o scrub.out
 normal: normal.cpp
 	$(GCC) $(CPPFLAGS) normal.cpp -o normal
 
 clean:
-	rm scrub
+	rm scrub.out
 	rm -f *.o
 
 

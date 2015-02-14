@@ -11,7 +11,7 @@ struct Timing
 
     void start_timing();
     void end_timing();
-    void print();
+    void print(std::string event);
 };
 
 void Timing::start_timing()
@@ -25,9 +25,9 @@ void Timing::end_timing()
     elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end_time-start_time).count()/1000.0;
 }
 
-void Timing::print()
+void Timing::print(std::string event)
 {
-    std::cout << "Time elapsed" << elapsed << " seconds\n";
+    std::cout << "Time elapsed - " << event << ": " << elapsed << " seconds\n";
 }
 
 #endif // TIMING_INCLUDED

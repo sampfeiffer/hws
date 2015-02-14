@@ -1,180 +1,115 @@
-#include <iostream>
 #include <fstream>
 #include <string>
-#include <vector>
 #include <cstdlib>
-#include <chrono>
-#include <algorithm>
+#include <sstream>
 #include <thread>
+#include <vector>
+#include "tick.h"
+#include "timing.h"
 
-// Only ignore data if it is very far off?
-// What about zero size?
-// How to test on own computer?
-// Do we need to anticipate different date discrepencies?
-// stuff you sent today?
+// Memory mapping headers.
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <assert.h>
 
-//test for duplicate ticks
-//ignore tiny volume
-//parallel makefiles
-// argv and argc
-
-
-// Needed to time things.
-#define TIMER_OBJ std::chrono::steady_clock::time_point
-#define NOW std::chrono::steady_clock::now()
-#define ELAPSED_TIME std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
-
-const int TEST_SIZE=1000, PRICE_MULTIPLE=4;
-static const int NUM_THREADS = 10;
-
-struct Data{
-    std::string time;
-    float price;
-    int units;
-
-    Data(std::string time_, float _price, int _units){
-        time = time_;
-        price = _price;
-        units = _units;
-    }
-};
-
-// Converts the time part of the date string to an int. Ignores fractions of a second.
-int time_to_int(std::string time)
-{
-    float num=0;
-    num+=atoi(time.substr(9,2).c_str())*3600;
-    num+=atoi(time.substr(12,2).c_str())*60;
-    num+=atoi(time.substr(15,2).c_str());
-    return num;
+size_t getFilesize(const char* filename) {
+    struct stat st;
+    stat(filename, &st);
+    return st.st_size;
 }
 
-bool compare_time(const Data &obj1, const Data &obj2)
+void process_data(char *mapped, int start_location, int end_location)
 {
-    return (obj1.time < obj2.time);
-}
+    int location = start_location;
+    std::stringstream ss;
 
-bool compare_price(const Data &obj1, const Data &obj2)
-{
-    return (obj1.price < obj2.price);
-}
+    // find newline
+    // maybe need to add to bad counter
+    while (mapped[location] != '\n' && mapped[location] != '\0' && location != 0){
+        ++location;
+    }
+    while (mapped[location] == '\n') ++location;
 
-// Checks if data is good.
-bool is_data_good(std::string time, float price, int units, float lower_price_range, float upper_price_range, std::string old_time)
-{
-    if (price <= std::max((float)0.0,lower_price_range) || price > upper_price_range) {
-        //std::cout << "bad price " << price << "\n";
-        return false;
+    // loop through entire file.
+    while (location < end_location){
+        // grab the entire line
+        while (mapped[location] != '\n' && mapped[location] != '\0'){
+            ss << mapped[location];
+            ++location;
+        }
+        std::string test_str = ss.str();
+        Tick test(test_str);
+        test.check_data();
+        ss.str(std::string()); // Empty ss
+        ++location;
     }
-    if (units <= 0){
-        //std::cout << "bad units " << units << "\n";
-        return false;
-    }
-    if (time.substr(0,8) != old_time.substr(0,8)){
-        std::cout << time << "\n";
-        return false;
-    }
-    if (std::abs(time_to_int(time)-time_to_int(old_time))>=2){
-        std::cout << time << "\n";
-        return false;
-    }
-    return true;
-}
-
-//test
-void ThreadFunction(int threadID) {
-    std::cout << "Hello from thread #" << threadID << std::endl;
 }
 
 int main(int argc, char *argv[])
 {
+    Timing program_time;
+    program_time.start_timing();
 
-    //open file
-    // read beginning data. and find medians.
-    // find valid starting date
-    // find valid volume
-    // find valid price
-    //read each line. put into data structure. check if data is good.
+    size_t filesize = getFilesize(argv[1]);
+    //Open file
+    int fd = open(argv[1], O_RDONLY, 0);
+    assert(fd != -1);
+    //Execute mmap
+    void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+    char* mapped = static_cast<char*>(mmappedData);
+    assert(mmappedData != NULL);
 
-
-    TIMER_OBJ t0 = NOW;
-    std::string filename = "data10k.txt";
-    std::string time_, price_str_, units_str_, old_time="";
-    float _price;
-    int _units;
-    std::vector<Data> lines;
-    std::ifstream infile;
-    bool is_data_good(std::string time, float price, int units, float lower_price_range, float upper_price_range, std::string old_time);
-
-    infile.open(filename);
-    if (!infile.is_open()){
-        std::cout << "error\n";
+    //split up file.
+    int num_threads = atoi(argv[2]);
+    std::cout << "num_threads: " << num_threads << "\n";
+    std::vector<int> file_split(num_threads+1);
+    for (int i=0; i<num_threads+1; ++i){
+        file_split[i] = i*filesize/num_threads;
+        std::cout << i << ": " << file_split[i] << "\n";
     }
+//    for (int i=0; i<num_threads; ++i){
+//        process_data(mapped, file_split[i], file_split[i+1]);
+//    }
+    //process_data(mapped, 0, filesize);
 
-    // Figure out upper and lower bound.
-    for (int i=0; i<TEST_SIZE; ++i){
-        if (!getline(infile, time_, ',')) break;
-        getline(infile, price_str_, ',');
-        _price = atof(price_str_.c_str());
-        getline(infile, units_str_);
-        _units = atoi(units_str_.c_str());
-        lines.push_back(Data(time_, _price, _units));
-    }
-    std::sort(lines.begin(), lines.end(), compare_price);
-    float q2, inter_quartile, lower_price_range, upper_price_range;
-    q2 = lines[lines.size()/2].price;
-    inter_quartile = lines[lines.size()*3/4].price - lines[lines.size()/4].price;
-    lower_price_range = q2-inter_quartile*PRICE_MULTIPLE;
-    upper_price_range = q2+inter_quartile*PRICE_MULTIPLE;
-    //std::cout << "lower_price_range " << lower_price_range << "\n";
-    //std::cout << "upper_price_range " << upper_price_range << "\n";
+    std::thread thread[num_threads];
 
-    lines.clear();
-    infile.seekg(0, infile.beg);
-
-    // Read data and remove bad entries.
-    while (!infile.eof()){
-        if (!getline(infile, time_, ',')) break;
-        //time_int = time_to_int(time_);
-        if (old_time =="") old_time = time_;
-        getline(infile, price_str_, ',');
-        _price = atof(price_str_.c_str());
-        getline(infile, units_str_);
-        _units = atoi(units_str_.c_str());
-        if (is_data_good(time_, _price, _units, lower_price_range, upper_price_range, old_time)){
-            lines.push_back(Data(time_, _price, _units));
-            old_time = time_;
-        }
-        //cout << time_ << " " << _price << " " << _units << "\n";
-    }
-
-    std::thread thread[NUM_THREADS];
-    //std::cout << std::thread::hardware_concurrency() << "\n";
     // Launch threads.
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        thread[i] = std::thread(ThreadFunction, i);
+    for (int i = 0; i < num_threads; ++i) {
+        thread[i] = std::thread(process_data, mapped, file_split[i], file_split[i+1]);
     }
-    std::cout << NUM_THREADS << " threads launched." << std::endl;
+    std::cout << num_threads << " threads launched." << std::endl;
+
     // Join threads to the main thread of execution.
-    for (int i = 0; i < NUM_THREADS; ++i) {
+    for (int i = 0; i < num_threads; ++i) {
         thread[i].join();
     }
+    // Even though threads ran independently and asynchronously,
+    // output the results as though they had run in serial fashion.
+    //for (int i = 0; i<num_threads; i++) std::cout << output[i];
 
-    infile.close();
-    TIMER_OBJ t1 = NOW;
+    std::cout << "filesize: " << filesize << "\n";
+    std::cout << "counter: " << Tick::counter << "\nbad_counter: " << Tick::bad_counter << "\n";
 
-//    for (unsigned int i=0; i<lines.size(); ++i){
-//        std::cout << lines[i].time << " " << lines[i].price << " " << lines[i].units << "\n";
-//    }
 
-    std::cout << "\nsize: " << lines.size() << "\n";
-    std::cout << "Read data - time elapsed: " << ELAPSED_TIME << "ms\n";
+    //Cleanup
+    int rc = munmap(mmappedData, filesize);
+    assert(rc == 0);
+    close(fd);
 
-    t0 = NOW;
-    std::sort(lines.begin(), lines.end(), compare_time);
-    t1 = NOW;
+    unsigned int n = std::thread::hardware_concurrency();
+    std::cout << n << " concurrent threads are supported.\n";
 
-    std::cout << "Sort data - time elapsed: " << ELAPSED_TIME << "ms\n\n";
+    program_time.end_timing();
+    program_time.print("total program");
 
     return 0;
 }
+
+// to do:
+// threading
+// starting off
+// the window thing

@@ -19,8 +19,9 @@ struct Tick
     float price;
     int units;
 
-    Tick(std::string tick_data); //Constructor
+    Tick(std::string tick_data, bool new_thread=false); //Constructor
     void print();
+    void print2();
     int check_data();
 };
 
@@ -33,7 +34,7 @@ int Tick::counter = 0;
 int Tick::bad_counter = 0;
 
 
-Tick::Tick(std::string tick_data)
+Tick::Tick(std::string tick_data, bool new_thread)
 {
     int price_end;
 
@@ -51,6 +52,10 @@ Tick::Tick(std::string tick_data)
 
     ++counter;
 
+    if (new_thread){
+        ;
+    }
+
 }
 
 void Tick::print()
@@ -59,6 +64,11 @@ void Tick::print()
     std::cout << std::setprecision(12) << "time: " << time << "\n";
     std::cout << std::setprecision(7) << "price: " << price << "\n";
     std::cout << "units: " << units << "\n";
+}
+
+void Tick::print2()
+{
+    std::cout << date << ":" << time << "," << price << "," << units;
 }
 
 int Tick::check_data()
@@ -71,13 +81,16 @@ int Tick::check_data()
     if (time-start_time > 2) error_num+=2;
 
     // Check price
-    if (std::abs((price-start_price)/start_price) > 0.6 || price <= 0) error_num+=4;
+    //if (std::abs((price-start_price)/start_price) > 0.6 || price <= 0) error_num+=4;
+    if (std::abs((price-start_price)/start_price) > 2 || price <= 0) error_num+=4;
 
     // Check units
     if (units < 0) error_num+=8;
 
     if (error_num){
         ++bad_counter;
+        print2();
+        std::cout << " " << error_num << "\n";
     }
 
     // If data is good. Update static data.
