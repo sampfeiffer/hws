@@ -4,37 +4,40 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <vector>
 
 struct Tick
 {
-    static std::string start_date;
-    static double start_time;
-    static float start_price;
-    static int start_units;
-    static int counter;
+    thread_local static std::string start_date;
+    thread_local static double start_time;
+    thread_local static float start_price;
+    thread_local static int start_units;
+    thread_local static int counter;
     static int bad_counter;
+    static std::vector<int> bad_vector;
 
     std::string date;
     double time;
     float price;
     int units;
 
-    Tick(std::string tick_data, bool new_thread=false); //Constructor
+    Tick(std::string tick_data, bool is_start_data=false); //Constructor
     void print();
     void print2();
     int check_data();
 };
 
 // This will need to be changed
-std::string Tick::start_date = "20140804";
-double Tick::start_time = 36000.574914;
-float Tick::start_price = 1173.56;
-int Tick::start_units = 471577;
-int Tick::counter = 0;
+thread_local std::string Tick::start_date = "";
+thread_local double Tick::start_time = 0;
+thread_local float Tick::start_price = 0;
+thread_local int Tick::start_units = 0;
+thread_local int Tick::counter = 0;
 int Tick::bad_counter = 0;
+std::vector<int> Tick::bad_vector(16,0);
 
 
-Tick::Tick(std::string tick_data, bool new_thread)
+Tick::Tick(std::string tick_data, bool is_start_data)
 {
     int price_end;
 
@@ -50,11 +53,7 @@ Tick::Tick(std::string tick_data, bool new_thread)
 
     units = atoi(tick_data.substr(price_end+1,tick_data.find("\n",34)-price_end+1).c_str());
 
-    ++counter;
-
-    if (new_thread){
-        ;
-    }
+    if (!is_start_data) ++counter;
 
 }
 
@@ -68,7 +67,7 @@ void Tick::print()
 
 void Tick::print2()
 {
-    std::cout << date << ":" << time << "," << price << "," << units;
+    std::cout << date << ":" << time << "," << price << "," << units << " " << start_price << "\n";
 }
 
 int Tick::check_data()
@@ -81,16 +80,14 @@ int Tick::check_data()
     if (time-start_time > 2) error_num+=2;
 
     // Check price
-    //if (std::abs((price-start_price)/start_price) > 0.6 || price <= 0) error_num+=4;
-    if (std::abs((price-start_price)/start_price) > 2 || price <= 0) error_num+=4;
+    if (std::abs((price-start_price)/start_price) > 0.6 || price <= 0) error_num+=4;
 
     // Check units
     if (units < 0) error_num+=8;
 
     if (error_num){
         ++bad_counter;
-        print2();
-        std::cout << " " << error_num << "\n";
+        ++bad_vector[error_num];
     }
 
     // If data is good. Update static data.
@@ -101,6 +98,26 @@ int Tick::check_data()
     }
 
     return error_num;
+}
+
+bool compare_date(const Tick &obj1, const Tick &obj2)
+{
+    return (obj1.date < obj2.date);
+}
+
+bool compare_time(const Tick &obj1, const Tick &obj2)
+{
+    return (obj1.time < obj2.time);
+}
+
+bool compare_price(const Tick &obj1, const Tick &obj2)
+{
+    return (obj1.price < obj2.price);
+}
+
+bool compare_units(const Tick &obj1, const Tick &obj2)
+{
+    return (obj1.units < obj2.units);
 }
 
 #endif // TICK_INCLUDED

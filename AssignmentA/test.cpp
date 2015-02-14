@@ -1,18 +1,25 @@
 #include <iostream>
 #include <thread>
-#include <string>
 
 static const int NUM_THREADS = 10;
-static std::string output[NUM_THREADS];
 
-// Thread function. When a thread is launched, this is the code that
-// gets executed.
+struct Test
+{
+    int num;
+    thread_local static int num_stat;
+    Test(int num_){
+        num = num_;
+        if (num_stat==0) num_stat = num_;
+    }
+};
+thread_local int Test::num_stat = 0;
+
 void ThreadFunction(int threadID) {
-    output[threadID] = "Hello from thread #" + std::to_string(threadID) + '\n';
+    Test obj(threadID);
+    std::cout << obj.num << " " << obj.num_stat << "\n";
 }
 
-int main()
-{
+int main() {
     std::thread thread[NUM_THREADS];
 
     // Launch threads.
@@ -25,9 +32,6 @@ int main()
     for (int i = 0; i < NUM_THREADS; ++i) {
         thread[i].join();
     }
-    // Even though threads ran independently and asynchronously,
-    // output the results as though they had run in serial fashion.
-    for (int i = 0; i<NUM_THREADS; i++) std::cout << output[i];
 
     return 0;
 }
