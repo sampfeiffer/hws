@@ -1,9 +1,10 @@
 #include <fstream>
 #include <string>
-#include <vector>
 #include <cstdlib>
 #include <sstream>
+#include <thread>
 #include "tick.h"
+#include "timing.h"
 
 // Memory mapping headers.
 #include <sys/mman.h>
@@ -21,6 +22,9 @@ size_t getFilesize(const char* filename) {
 
 int main(int argc, char *argv[])
 {
+    Timing program_time;
+    program_time.start_timing();
+
     size_t filesize = getFilesize(argv[1]);
     //Open file
     int fd = open(argv[1], O_RDONLY, 0);
@@ -33,7 +37,9 @@ int main(int argc, char *argv[])
     int location = 0;
     std::stringstream ss;
 
+    // loop through entire file.
     while (mapped[location] != '\0'){
+        // grab the entire line
         while (mapped[location] != '\n'){
             if (mapped[location] == '\0') break;
             ss << mapped[location];
@@ -42,16 +48,22 @@ int main(int argc, char *argv[])
         std::string test_str = ss.str();
         Tick test(test_str);
         test.check_data();
-        ss.str(std::string());
+        ss.str(std::string()); // Empty ss
         ++location;
     }
-    std::cout << "\ncounter: " << Tick::counter << "\nbad_counter: " << Tick::bad_counter << "\n";
+    std::cout << "counter: " << Tick::counter << "\nbad_counter: " << Tick::bad_counter << "\n";
 
 
     //Cleanup
     int rc = munmap(mmappedData, filesize);
     assert(rc == 0);
     close(fd);
+
+    unsigned int n = std::thread::hardware_concurrency();
+    std::cout << n << " concurrent threads are supported.\n";
+
+    program_time.end_timing();
+    program_time.print();
 
     return 0;
 }
