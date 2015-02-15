@@ -1,10 +1,8 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
-
 #include <thread>
-
-
+#include <vector>
 #include "tick.h"
 #include "timing.h"
 #include "process.h"

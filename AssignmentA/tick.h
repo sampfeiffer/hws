@@ -5,34 +5,36 @@
 #include <iomanip>
 #include <cmath>
 #include <vector>
+#include <string>
 
 struct Tick
 {
-    thread_local static std::string start_date;
-    thread_local static double start_time;
-    thread_local static float start_price;
-    thread_local static int start_units;
-    thread_local static int counter;
+    static __thread char* start_date;
+    static __thread double start_time;
+    static __thread float start_price;
+    static __thread int start_units;
+    static __thread int counter;
     static int bad_counter;
     static std::vector<int> bad_vector;
 
-    std::string date;
+    char* date;
     double time;
     float price;
     int units;
 
     Tick(std::string tick_data, bool is_start_data=false); //Constructor
+    void static_init();
     void print();
     void print2();
     int check_data();
 };
 
 // This will need to be changed
-thread_local std::string Tick::start_date = "";
-thread_local double Tick::start_time = 0;
-thread_local float Tick::start_price = 0;
-thread_local int Tick::start_units = 0;
-thread_local int Tick::counter = 0;
+__thread char* Tick::start_date;
+__thread double Tick::start_time;
+__thread float Tick::start_price;
+__thread int Tick::start_units;
+__thread int Tick::counter;
 int Tick::bad_counter = 0;
 std::vector<int> Tick::bad_vector(16,0);
 
@@ -41,7 +43,10 @@ Tick::Tick(std::string tick_data, bool is_start_data)
 {
     int price_end;
 
-    date = tick_data.substr(0,8);
+    for (int i=0; i<=8; ++i){
+        date[i] = tick_data[i];
+    }
+    date[9] = '\0';
 
     time = 0;
     time += atoi(tick_data.substr(9,2).c_str())*3600;
@@ -54,7 +59,16 @@ Tick::Tick(std::string tick_data, bool is_start_data)
     units = atoi(tick_data.substr(price_end+1,tick_data.find("\n",34)-price_end+1).c_str());
 
     if (!is_start_data) ++counter;
+    if (!start_time) static_init();
 
+}
+
+void Tick::static_init()
+{
+    start_date = {'\0'};
+    start_time = 0;
+    start_price = 0;
+    start_units = 0;
 }
 
 void Tick::print()
