@@ -6,6 +6,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include<cstring>
 
 struct Tick
 {
@@ -17,12 +18,13 @@ struct Tick
     static int bad_counter;
     static std::vector<int> bad_vector;
 
-    char* date;
+    char date[9];
     double time;
     float price;
     int units;
 
     Tick(std::string tick_data, bool is_start_data=false); //Constructor
+    //~Tick();
     void static_init();
     void print();
     void print2();
@@ -43,10 +45,14 @@ Tick::Tick(std::string tick_data, bool is_start_data)
 {
     int price_end;
 
-    for (int i=0; i<=8; ++i){
-        date[i] = tick_data[i];
-    }
-    date[9] = '\0';
+//    for (int i=0; i<=8; ++i){
+//        date[i] = tick_data[i];
+//    }
+//    date[9] = '\0';
+    //date = tick_data.substr(0,8).c_str();
+
+    //date = new char[9];
+    strcpy(date, tick_data.substr(0,8).c_str());
 
     time = 0;
     time += atoi(tick_data.substr(9,2).c_str())*3600;
@@ -62,6 +68,11 @@ Tick::Tick(std::string tick_data, bool is_start_data)
     if (!start_time) static_init();
 
 }
+
+//Tick::~Tick()
+//{
+//    delete [] date;
+//}
 
 void Tick::static_init()
 {
