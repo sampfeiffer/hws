@@ -28,10 +28,10 @@ int main(int argc, char *argv[])
 
     size_t filesize = getFilesize(argv[1]);
     //Open file
-    int fd = open(argv[1], O_RDONLY, 0);
+    int fd = open(argv[1], O_RDWR, 0);
     assert(fd != -1);
     //Execute mmap
-    void* mmappedData = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+    void* mmappedData = mmap(NULL, filesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
     char* mapped = static_cast<char*>(mmappedData);
     assert(mmappedData != NULL);
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     }
 
     // Join threads to the main thread of execution.
-    for (int i = 0; i < num_threads; ++i) {
+    for (int i=0; i<num_threads; ++i){
         thread[i].join();
     }
 

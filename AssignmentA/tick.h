@@ -6,7 +6,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
-#include<cstring>
+#include <cstring>
 
 struct Tick
 {
@@ -23,15 +23,13 @@ struct Tick
     float price;
     int units;
 
-    Tick(std::string tick_data, bool is_start_data=false); //Constructor
-    //~Tick();
-    void static_init();
+    Tick(std::string tick_data); //Constructor
+    //void static_init();
     void print();
     void print2();
-    int check_data();
+    int check_data(bool update_ref=true);
 };
 
-// This will need to be changed
 __thread char* Tick::start_date;
 __thread double Tick::start_time;
 __thread float Tick::start_price;
@@ -41,17 +39,10 @@ int Tick::bad_counter = 0;
 std::vector<int> Tick::bad_vector(16,0);
 
 
-Tick::Tick(std::string tick_data, bool is_start_data)
+Tick::Tick(std::string tick_data)
 {
     int price_end;
 
-//    for (int i=0; i<=8; ++i){
-//        date[i] = tick_data[i];
-//    }
-//    date[9] = '\0';
-    //date = tick_data.substr(0,8).c_str();
-
-    //date = new char[9];
     strcpy(date, tick_data.substr(0,8).c_str());
 
     time = 0;
@@ -64,23 +55,18 @@ Tick::Tick(std::string tick_data, bool is_start_data)
 
     units = atoi(tick_data.substr(price_end+1,tick_data.find("\n",34)-price_end+1).c_str());
 
-    if (!is_start_data) ++counter;
-    if (!start_time) static_init();
+    ++counter;
+    //if (!start_time) static_init();
 
 }
 
-//Tick::~Tick()
+//void Tick::static_init()
 //{
-//    delete [] date;
+//    start_date = {'\0'};
+//    start_time = 0;
+//    start_price = 0;
+//    start_units = 0;
 //}
-
-void Tick::static_init()
-{
-    start_date = {'\0'};
-    start_time = 0;
-    start_price = 0;
-    start_units = 0;
-}
 
 void Tick::print()
 {
@@ -92,14 +78,14 @@ void Tick::print()
 
 void Tick::print2()
 {
-    std::cout << date << ":" << time << "," << price << "," << units << " " << start_price << "\n";
+    std::cout << counter << " " << date << ":" << time << "," << price << "," << units << " " << start_price;
 }
 
-int Tick::check_data()
+int Tick::check_data(bool update_ref)
 {
     int error_num=0;
     // Check date.
-    if (date != start_date) error_num+=1;
+    if (std::string(date) != std::string(start_date)) error_num+=1;
 
     // Check time
     if (time-start_time > 2) error_num+=2;
@@ -113,10 +99,12 @@ int Tick::check_data()
     if (error_num){
         ++bad_counter;
         ++bad_vector[error_num];
+        //print2();
+        //std::cout << " " << error_num << " " << start_date << "\n";
     }
 
     // If data is good. Update static data.
-    else if (counter%100 == 0){
+    else if (counter%100 == 0 && update_ref){
         start_time = time;
         start_price = price;
         start_units = units;  //is this needed??
