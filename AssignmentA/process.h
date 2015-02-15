@@ -33,23 +33,26 @@ void process_data(char *mapped, int start_location, int end_location)
         Tick::bad_counter += 1; // for the skipped line in the beginning
         ++total_counter;
     }
-    std::cout << "here2\n";
 
     //figure out start data
     std::vector<Tick> start_list;
     int start_data_size=0;
-    std::cout << "here3\n";
+    std::cout << "here1\n";
     // loop through first WINDOW_SIZE lines and push into start_list.
     while (start_data_size < WINDOW_SIZE && location < end_location){
-        std::cout << "here4 " << start_data_size << "\n";
+        std::cout << "here2 " << start_data_size << "\n";
         get_line(mapped, ss, location, end_location); // Grab the entire line
+        std::cout << "here3 " << start_data_size << "\n";
         if (location >= end_location) break;
+        std::cout << "here4 " << start_data_size << "\n";
         start_list.push_back(Tick(ss.str(), true));
+        std::cout << "here5 " << start_data_size << "\n";
         ++start_data_size;
         ss.str(std::string()); // Empty ss
         ++location;
+        std::cout << "here6 " << start_data_size << "\n";
     }
-    std::cout << "here5\n";
+    std::cout << "here7\n";
 
     // All start data is in vector. Now find median for all 4 catagories.
     // Use the medians as the reference point data to check if other data is bad.
