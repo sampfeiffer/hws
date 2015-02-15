@@ -22,6 +22,8 @@ void process_data(char *mapped, int start_location, int end_location)
     int location = start_location;
     std::stringstream ss;
 
+    std::cout << "here1\n";
+
     // find newline
     while (mapped[location] != '\n' && mapped[location] != '\0' && location != 0){
         ++location;
@@ -33,6 +35,7 @@ void process_data(char *mapped, int start_location, int end_location)
         Tick::bad_counter += 1; // for the skipped line in the beginning
         ++total_counter;
     }
+    std::cout << "here2\n";
 
     //figure out start data
     std::vector<Tick> start_list;
@@ -46,6 +49,7 @@ void process_data(char *mapped, int start_location, int end_location)
         ss.str(std::string()); // Empty ss
         ++location;
     }
+    std::cout << "here3\n";
 
     // All start data is in vector. Now find median for all 4 catagories.
     // Use the medians as the reference point data to check if other data is bad.
@@ -63,7 +67,7 @@ void process_data(char *mapped, int start_location, int end_location)
 //    for (int i=0; i<start_list.size(); ++i){
 //        obj.check_data();
 //    }
-
+    std::cout << "here4\n";
     // Loop through entire file.
     while (location < end_location){
         get_line(mapped, ss, location, end_location); // Grab the entire line
@@ -74,6 +78,7 @@ void process_data(char *mapped, int start_location, int end_location)
         ++location;
     }
     total_counter += Tick::counter;
+    std::cout << "here5\n";
 }
 
 #endif // PROCESS_INCLUDED
