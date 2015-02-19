@@ -4,10 +4,11 @@ all: scrub normal
 scrub: scrub.cpp
 	$(GCC) $(CPPFLAGS) scrub.cpp -o scrub.out
 normal: normal.cpp
-	$(GCC) $(CPPFLAGS) normal.cpp -o normal
+	$(GCC) $(CPPFLAGS) normal.cpp -o normal.out
 
 clean:
 	rm scrub.out
+	rm normal.out
 	rm -f *.o
 
 

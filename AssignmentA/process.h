@@ -8,12 +8,14 @@
 int total_counter=0;
 const int WINDOW_SIZE=100;
 
-void get_line(char *mapped, std::stringstream &ss, int &location, int &end_location)
+int get_line(char *mapped, std::stringstream &ss, int &location, int &end_location)
 {
+    int start_of_line = location;
     while (mapped[location] != '\n' && location < end_location){
         ss << mapped[location];
         ++location;
     }
+    return start_of_line;
 }
 
 Tick find_median(std::list<Tick> &start_list)
@@ -73,13 +75,14 @@ void process_data(char *mapped, int start_location, int end_location, std::strin
 
     // Loop through entire file.
 
-
+    int start_of_line;
     while (location < end_location){
-        get_line(mapped, ss, location, end_location); // Grab the entire line
+        start_of_line = get_line(mapped, ss, location, end_location); // Grab the entire line
         if (location >= end_location) break;
         Tick obj(ss.str());
         if (obj.check_data()){
             *noise << ss.str() << "\n";
+            mapped[start_of_line] = 'x';
         }
         ss.str(std::string()); // Empty ss
         ++location;

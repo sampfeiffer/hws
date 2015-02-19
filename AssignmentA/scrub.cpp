@@ -34,19 +34,28 @@ void copy_file(const char *from, const char *to)
 int main(int argc, char *argv[])
 {
     const char *signal_filename = "signal.txt";
-    copy_file(argv[1], signal_filename);
+    bool copy_file_bool = false;
+
+    // Copy data file into a file called "signal.txt". All operations take place on this file.
+    Timing copy_file_time;
+    copy_file_time.start_timing();
+    if (!argv[3] || (argv[3] && strcmp(argv[3], "no") != 0)) copy_file_bool = true;
+    if (copy_file_bool){
+        copy_file(argv[1], signal_filename);
+    }
+    copy_file_time.end_timing();
+
 
     Timing program_time;
     program_time.start_timing();
 
     size_t filesize = getFilesize(signal_filename);
     //Open file
-    int fd = open(argv[1], O_RDWR, 0);
+    int fd = open(signal_filename, O_RDWR, 0);
     assert(fd != -1);
     //Execute mmap
-    void* mmappedData = mmap(NULL, filesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0);
-    char* mapped = static_cast<char*>(mmappedData);
-    assert(mmappedData != NULL);
+    char* mapped = static_cast<char*>(mmap(NULL, filesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0));
+    assert(mapped != NULL);
 
     //split up file.
     int num_threads = atoi(argv[2]);
@@ -69,6 +78,8 @@ int main(int argc, char *argv[])
         thread[i].join();
     }
 
+    Timing noise_write_time;
+    noise_write_time.start_timing();
     std::ofstream outfile;
     std::string outfile_name = "noise.txt";
     outfile.open(outfile_name);
@@ -76,20 +87,26 @@ int main(int argc, char *argv[])
         outfile << noise[i].str();
     }
     outfile.close();
+    noise_write_time.end_timing();
 
     std::cout << "filesize: " << filesize << "\n";
     std::cout << "counter: " << total_counter << "\nbad_counter: " << Tick::bad_counter << "\n";
 
 
     //Cleanup
-    int rc = munmap(mmappedData, filesize);
+    int rc = munmap(mapped, filesize);
     assert(rc == 0);
     close(fd);
 
     unsigned int n = std::thread::hardware_concurrency();
     std::cout << n << " concurrent threads are supported.\n";
 
+    if (!copy_file_bool) rename(argv[1], "signal.txt");
+
     program_time.end_timing();
+
+    copy_file_time.print("file copy");
+    noise_write_time.print("noise writing");
     program_time.print("total program");
 
     std::cout << "\n";
