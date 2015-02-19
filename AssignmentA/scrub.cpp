@@ -21,12 +21,25 @@ size_t getFilesize(const char* filename) {
     return st.st_size;
 }
 
+void copy_file(const char *from, const char *to)
+{
+    std::ifstream inFile(from);
+    std::ofstream outFile(to);
+
+    outFile << inFile.rdbuf();
+    inFile.close();
+    outFile.close();
+}
+
 int main(int argc, char *argv[])
 {
+    const char *signal_filename = "signal.txt";
+    copy_file(argv[1], signal_filename);
+
     Timing program_time;
     program_time.start_timing();
 
-    size_t filesize = getFilesize(argv[1]);
+    size_t filesize = getFilesize(signal_filename);
     //Open file
     int fd = open(argv[1], O_RDWR, 0);
     assert(fd != -1);
@@ -44,16 +57,25 @@ int main(int argc, char *argv[])
     }
 
     std::thread thread[num_threads];
+    std::vector<std::stringstream> noise(num_threads);
 
     // Launch threads.
     for (int i=0; i<num_threads; ++i) {
-        thread[i] = std::thread(process_data, mapped, file_split[i], file_split[i+1]);
+        thread[i] = std::thread(process_data, mapped, file_split[i], file_split[i+1], &noise[i]);
     }
 
     // Join threads to the main thread of execution.
     for (int i=0; i<num_threads; ++i){
         thread[i].join();
     }
+
+    std::ofstream outfile;
+    std::string outfile_name = "noise.txt";
+    outfile.open(outfile_name);
+    for (int i=0; i<num_threads; ++i){
+        outfile << noise[i].str();
+    }
+    outfile.close();
 
     std::cout << "filesize: " << filesize << "\n";
     std::cout << "counter: " << total_counter << "\nbad_counter: " << Tick::bad_counter << "\n";

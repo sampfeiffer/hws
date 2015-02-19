@@ -1,37 +1,24 @@
 #include <iostream>
-#include <thread>
-
-static const int NUM_THREADS = 10;
-
-struct Test
-{
-    int num;
-    thread_local static int num_stat;
-    Test(int num_){
-        num = num_;
-        if (num_stat==0) num_stat = num_;
-    }
-};
-thread_local int Test::num_stat = 0;
-
-void ThreadFunction(int threadID) {
-    Test obj(threadID);
-    std::cout << obj.num << " " << obj.num_stat << "\n";
-}
+#include <cmath>
+#include <sstream>
 
 int main() {
-    std::thread thread[NUM_THREADS];
+    double time = 48327.324;
 
-    // Launch threads.
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        thread[i] = std::thread(ThreadFunction, i);
-    }
-    std::cout << NUM_THREADS << " threads launched." << std::endl;
+    std::stringstream time_text;
+    double integral;
+    double seconds_frac = modf(time, &integral);
 
-    // Join threads to the main thread of execution.
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        thread[i].join();
-    }
+    int time_int = int(time);
+
+    int seconds_int = time_int % 60;
+    int minutes = (time_int-seconds_int)/60 % 60;
+    int hours = (time_int-minutes*60-seconds_int) / 3600;
+
+
+    time_text << hours << ":" << minutes << ":" << seconds_int + seconds_frac << "\n";
+    std::string test = time_text.str();
+    std::cout << test << "\n";
 
     return 0;
 }

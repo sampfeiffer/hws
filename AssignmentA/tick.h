@@ -7,6 +7,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <sstream>
 
 struct Tick
 {
@@ -28,6 +29,7 @@ struct Tick
     void print();
     void print2();
     int check_data(bool update_ref=true);
+    std::string print3();
 };
 
 __thread char* Tick::start_date;
@@ -111,6 +113,28 @@ int Tick::check_data(bool update_ref)
     }
 
     return error_num;
+}
+
+std::string Tick::print3()
+{
+    //if (time<10) std::cout <<time<< "\n";
+    std::stringstream text;
+    double integral;
+    double seconds_frac = modf(time, &integral);
+
+    int time_int = int(time);
+
+    int seconds_int = time_int % 60;
+    int minutes = (time_int-seconds_int)/60 % 60;
+    int hours = (time_int-minutes*60-seconds_int) / 3600;
+
+    text << date << ":";
+
+    text << std::setfill('0') << std::setw(2) << hours << ":"
+         << std::setfill('0') << std::setw(2) << minutes << ":"
+         << std::setfill('0') << std::setw(8) << seconds_int + seconds_frac;
+    text << "," << price << "," << units;
+    return text.str();
 }
 
 bool compare_date(const Tick &obj1, const Tick &obj2)

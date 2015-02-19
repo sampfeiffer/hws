@@ -23,7 +23,7 @@ Tick find_median(std::list<Tick> &start_list)
     return *iter1;
 }
 
-void process_data(char *mapped, int start_location, int end_location)
+void process_data(char *mapped, int start_location, int end_location, std::stringstream *noise)
 {
     int location = start_location;
     std::stringstream ss;
@@ -64,7 +64,10 @@ void process_data(char *mapped, int start_location, int end_location)
 
     std::list<Tick>::iterator iter = start_list.begin();
     for (int i=0; i<start_list.size(); ++i){
-        iter->check_data(false);
+
+        if (iter->check_data(false)){
+            *noise << iter->print3() << "\n";
+        }
         ++iter;
     }
 
@@ -75,7 +78,9 @@ void process_data(char *mapped, int start_location, int end_location)
         get_line(mapped, ss, location, end_location); // Grab the entire line
         if (location >= end_location) break;
         Tick obj(ss.str());
-        obj.check_data();
+        if (obj.check_data()){
+            *noise << ss.str() << "\n";
+        }
         ss.str(std::string()); // Empty ss
         ++location;
     }
