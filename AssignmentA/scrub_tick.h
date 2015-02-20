@@ -68,7 +68,7 @@ int Tick::check_data(bool update_ref)
     if (time-start_time > 5) error_num+=2;
 
     // Check for unrealistic price jumps
-    if (std::abs((price-start_price)/start_price) * (time-start_time) > 0.5 || price <= 0) error_num+=4;
+    if (std::abs((price-start_price)/(start_price*(time-start_time))) > 10 || price <= 0) error_num+=4;
 
     // Check units
     if (units < 0 || units > 1000*start_units) error_num+=8;
