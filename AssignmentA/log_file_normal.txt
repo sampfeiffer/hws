@@ -1,12 +1,95 @@
 1 concurrent threads are supported.
-Number of threads: 5
+Number of threads: 10
 Filesize: 4077523
+
 Thread 0 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1019461632
+Total physical memory: 1866477568
+Total physical memory used: 1019461632
+Total cpu in use: 12.1835%
+-----------------------------------------
+
 Thread 1 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1019461632
+Total physical memory: 1866477568
+Total physical memory used: 1019461632
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 2 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1019461632
+Total physical memory: 1866477568
+Total physical memory used: 1019461632
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 3 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1019461632
+Total physical memory: 1866477568
+Total physical memory used: 1019461632
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 4 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1019461632
+Total physical memory: 1866477568
+Total physical memory used: 1019461632
+Total cpu in use: -nan%
+-----------------------------------------
+
+Thread 5 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1019461632
+Total physical memory: 1866477568
+Total physical memory used: 1019461632
+Total cpu in use: -nan%
+-----------------------------------------
+
+Thread 6 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1019461632
+Total physical memory: 1866477568
+Total physical memory used: 1019461632
+Total cpu in use: -nan%
+-----------------------------------------
+
+Thread 7 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1021579264
+Total physical memory: 1866477568
+Total physical memory used: 1021579264
+Total cpu in use: -nan%
+-----------------------------------------
+
+Thread 8 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1023811584
+Total physical memory: 1866477568
+Total physical memory used: 1023811584
+Total cpu in use: 100%
+-----------------------------------------
+
+Thread 9 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1023811584
+Total physical memory: 1866477568
+Total physical memory used: 1023811584
+Total cpu in use: 100%
+-----------------------------------------
+
 Back in main thread.
-Jarque_bera value: 3367
+Total virtual memory: 3778027520
+Total virtual memory used: 1019998208
+Total physical memory: 1866477568
+Total physical memory used: 1019998208
+Total cpu in use: 100%
+-----------------------------------------
+
+Jarque_bera value: 1956
 Probability that the returns are normally distributed: 0
-Time elapsed - total program: 0.384 seconds
+Time elapsed - total program: 0.491 seconds

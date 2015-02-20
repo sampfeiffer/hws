@@ -1,4 +1,4 @@
-CPPFLAGS = -O3 -std=c++11 -pthread
+CPPFLAGS = -std=c++11 -pthread
 GCC = g++
 all: scrub normal
 scrub: scrub.cpp

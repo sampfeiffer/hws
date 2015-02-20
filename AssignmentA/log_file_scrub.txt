@@ -1,20 +1,97 @@
-Time elapsed - file copy: 0.02 seconds
+Time elapsed - file copy: 0.03 seconds
 1 concurrent threads are supported.
 Number of threads: 10
 Filesize: 4077523 characters
 Thread 0 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018654720
+Total physical memory: 1866477568
+Total physical memory used: 1018654720
+Total cpu in use: 12.1806%
+-----------------------------------------
+
 Thread 1 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018654720
+Total physical memory: 1866477568
+Total physical memory used: 1018654720
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 2 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018654720
+Total physical memory: 1866477568
+Total physical memory used: 1018654720
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 3 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018654720
+Total physical memory: 1866477568
+Total physical memory used: 1018654720
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 4 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018654720
+Total physical memory: 1866477568
+Total physical memory used: 1018654720
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 5 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018789888
+Total physical memory: 1866477568
+Total physical memory used: 1018789888
+Total cpu in use: 100%
+-----------------------------------------
+
 Thread 6 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018789888
+Total physical memory: 1866477568
+Total physical memory used: 1018789888
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 7 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018789888
+Total physical memory: 1866477568
+Total physical memory used: 1018789888
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 8 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018789888
+Total physical memory: 1866477568
+Total physical memory used: 1018789888
+Total cpu in use: -nan%
+-----------------------------------------
+
 Thread 9 launched
+Total virtual memory: 3778027520
+Total virtual memory used: 1018789888
+Total physical memory: 1866477568
+Total physical memory used: 1018789888
+Total cpu in use: -nan%
+-----------------------------------------
+
 Back in main thread.
+Total virtual memory: 3778027520
+Total virtual memory used: 1019338752
+Total physical memory: 1866477568
+Total physical memory used: 1019338752
+Total cpu in use: 100%
+-----------------------------------------
+
 Time elapsed - noise writing: 0 seconds
 Total ticks: 100000
-Noise: 2460
-Percentage noise: 2.46%
-Time elapsed - total program: 0.322 seconds
+Noise: 4515
+Percentage noise: 4.515%
+Time elapsed - total program: 0.363 seconds

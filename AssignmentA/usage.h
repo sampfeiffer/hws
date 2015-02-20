@@ -1,3 +1,6 @@
+#ifndef USAGE_INCLUDED
+#define USAGE_INCLUDED
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -7,6 +10,8 @@
 #include "stdio.h"
 #include "string.h"
 
+// This header file grabs information about the system memory and cpu usage.
+// Found the majority of this code online.
 
 static unsigned long long lastTotalUser, lastTotalUserLow, lastTotalSys, lastTotalIdle;
 
@@ -16,7 +21,6 @@ void init(){
         &lastTotalSys, &lastTotalIdle);
     fclose(file);
 }
-
 
 double getCurrentValue(){
     double percent;
@@ -78,13 +82,10 @@ std::string get_info()
                 << "Total virtual memory used: " << virtual_mem_used << "\n"
                 << "Total physical memory: " << total_phys_mem << "\n"
                 << "Total physical memory used: " << phys_mem_used << "\n"
-                << "Total cpu in use: " << getCurrentValue() << "%\n";
+                << "Total cpu in use: " << getCurrentValue() << "%\n"
+                << "-----------------------------------------\n\n";
 
     return info_stream.str();
 }
 
-int main(){
-
-    std::cout << get_info();
-    return 0;
-}
+#endif // USAGE_INCLUDED

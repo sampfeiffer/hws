@@ -1,10 +1,9 @@
 #include <thread>
 #include <numeric>
-#include <fstream>
 #include <sstream>
-#include "normal_tick.h"
+#include <vector>
+#include "normal_functions.h"
 #include "timing.h"
-#include "normal_process.h"
 #include "logging.h"
 
 // Memory mapping headers.
@@ -12,14 +11,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/stat.h>
 #include <assert.h>
-
-size_t getFilesize(const char* filename) {
-    struct stat st;
-    stat(filename, &st);
-    return st.st_size;
-}
 
 int main(int argc, char *argv[])
 {
@@ -47,7 +39,7 @@ int main(int argc, char *argv[])
     unsigned int possible_threads = std::thread::hardware_concurrency();
     log_text << possible_threads << " concurrent threads are supported.\n";
     log_text << "Number of threads: " << num_threads << "\n";
-    log_text << "Filesize: " << filesize << "\n";
+    log_text << "Filesize: " << filesize << "\n\n";
     logger.write(log_text);
 
     // Split up file. between threads
@@ -63,7 +55,7 @@ int main(int argc, char *argv[])
     for (int i=0; i<num_threads; ++i) {
         thread[i] = std::thread(normal_process_data, mapped, file_split[i], file_split[i+1], &jb_vector[i]);
         log_text << "Thread " << i << " launched\n";
-        logger.write(log_text);
+        logger.write(log_text, true);
     }
 
     // Join threads to the main thread of execution.
@@ -71,7 +63,7 @@ int main(int argc, char *argv[])
         thread[i].join();
     }
     log_text << "Back in main thread.\n";
-    logger.write(log_text);
+    logger.write(log_text, true);
 
     int jarque_bera =std::accumulate(jb_vector.begin(),jb_vector.end(),0);
     float prob = exp(-jarque_bera/2.0);

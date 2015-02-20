@@ -1,13 +1,10 @@
 #ifndef NORMAL_TICK_INCLUDED
 #define NORMAL_TICK_INCLUDED
 
-#include <iostream>
-#include <iomanip>
-#include <cmath>
-#include <vector>
 #include <string>
 #include <cstring>
-#include <sstream>
+
+// Struct for the tick data. For the normality check, only the price is needed
 
 struct Tick
 {
@@ -16,6 +13,7 @@ struct Tick
     Tick(std::string tick_data); //Constructor
 };
 
+// Constructor. Figures out the price from the input string.
 Tick::Tick(std::string tick_data)
 {
     int price_end;

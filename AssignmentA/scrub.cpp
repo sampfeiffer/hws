@@ -1,11 +1,9 @@
-#include <fstream>
-#include <string>
 #include <cstdlib>
 #include <thread>
 #include <vector>
 #include "scrub_tick.h"
 #include "timing.h"
-#include "scrub_process.h"
+#include "scrub_functions.h"
 #include "logging.h"
 
 // Memory mapping headers.
@@ -13,27 +11,11 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/stat.h>
 #include <assert.h>
-
-size_t getFilesize(const char* filename) {
-    struct stat st;
-    stat(filename, &st);
-    return st.st_size;
-}
-
-void copy_file(const char *from, const char *to)
-{
-    std::ifstream inFile(from);
-    std::ofstream outFile(to);
-
-    outFile << inFile.rdbuf();
-    inFile.close();
-    outFile.close();
-}
 
 int main(int argc, char *argv[])
 {
+    // Input error checking
     if (argc < 3){
         std::cout << "ERROR: program needs 2 or 3 parameters\n"
                   << "Format is\n"
@@ -49,6 +31,7 @@ int main(int argc, char *argv[])
     bool copy_file_bool = false;
 
     // Copy data file into a file called "signal.txt". All operations take place on this file.
+    // Ignore this if the user inputs "no" as the third parameter.
     Timing copy_file_time;
     copy_file_time.start_timing();
     if (!argv[3] || (argv[3] && strcmp(argv[3], "no") != 0)) copy_file_bool = true;
@@ -69,14 +52,15 @@ int main(int argc, char *argv[])
     char* mapped = static_cast<char*>(mmap(NULL, filesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0)); //Execute mmap
     assert(mapped != NULL); // Error check
 
+    // Threading and filesize info.
     unsigned int num_threads = atoi(argv[2]);
     unsigned int possible_threads = std::thread::hardware_concurrency();
     log_text << possible_threads << " concurrent threads are supported.\n";
     log_text << "Number of threads: " << num_threads << "\n";
-    log_text << "Filesize: " << filesize << " characters\n";
+    log_text << "Filesize: " << filesize << " characters\n\n";
     logger.write(log_text);
 
-    // Split up file. between threads
+    // Split up file between threads
     std::vector<int> file_split(num_threads+1);
     for (int i=0; i<num_threads+1; ++i){
         file_split[i] = i*filesize/num_threads;
@@ -89,7 +73,7 @@ int main(int argc, char *argv[])
     for (int i=0; i<num_threads; ++i) {
         thread[i] = std::thread(process_data, mapped, file_split[i], file_split[i+1], &noise[i]);
         log_text << "Thread " << i << " launched\n";
-        logger.write(log_text);
+        logger.write(log_text, true);
     }
 
     // Join threads to the main thread of execution.
@@ -97,7 +81,7 @@ int main(int argc, char *argv[])
         thread[i].join();
     }
     log_text << "Back in main thread.\n";
-    logger.write(log_text);
+    logger.write(log_text, true);
 
     // Write the noise to noise.txt
     Timing noise_write_time;
@@ -113,6 +97,7 @@ int main(int argc, char *argv[])
     log_text << noise_write_time.print("noise writing");
     logger.write(log_text);
 
+    // Results of the scrub.
     log_text << "Total ticks: " << total_counter
               << "\nNoise: " << Tick::bad_counter
               << "\nPercentage noise: " << 100*double(Tick::bad_counter)/total_counter << "%\n";
@@ -126,7 +111,6 @@ int main(int argc, char *argv[])
     if (!copy_file_bool) rename(argv[1], "signal.txt");
 
     program_time.end_timing();
-
     log_text << program_time.print("total program");
     logger.write(log_text);
 
