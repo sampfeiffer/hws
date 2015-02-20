@@ -1,4 +1,4 @@
-Time elapsed - file copy: 0.034 seconds
+Time elapsed - file copy: 0.03 seconds
 1 concurrent threads are supported.
 Number of threads: 10
 Filesize: 4077523 characters
@@ -15,6 +15,6 @@ Thread 9 launched
 Back in main thread.
 Time elapsed - noise writing: 0 seconds
 Total ticks: 100000
-Noise: 3468
-Percentage noise: 3.468%
-Time elapsed - total program: 0.288 seconds
+Noise: 3975
+Percentage noise: 3.975%
+Time elapsed - total program: 0.315 seconds

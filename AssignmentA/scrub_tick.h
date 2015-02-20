@@ -67,11 +67,11 @@ int Tick::check_data(bool update_ref)
     // Check time
     if (time-start_time > 5) error_num+=2;
 
-    // Check price
-    if (std::abs((price-start_price)/start_price) > 0.6 || price <= 0) error_num+=4;
+    // Check for unrealistic price jumps
+    if (std::abs((price-start_price)/start_price) * (time-start_time) > 0.5 || price <= 0) error_num+=4;
 
     // Check units
-    if (units < 0) error_num+=8;
+    if (units < 0 || units > 1000*start_units) error_num+=8;
 
     if (error_num){
         ++bad_counter;
@@ -84,7 +84,8 @@ int Tick::check_data(bool update_ref)
     else if (counter%100 == 0 && update_ref){
         start_time = time;
         start_price = price;
-        start_units = units;  //is this needed??
+        start_units = units;
+        //std::cout << "start units " << start_units << "\n";
     }
 
     return error_num;
