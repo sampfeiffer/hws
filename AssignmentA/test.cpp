@@ -1,19 +1,20 @@
 #include <iostream>
-#include <cmath>
+#include <chrono>
+#include <ctime>
 
-void test(int *i)
+std::string now()
 {
-    *i = 5;
+    //set time_point to current time
+    std::chrono::time_point<std::chrono::system_clock> time_point;
+    time_point = std::chrono::system_clock::now();
+
+    std::time_t ttp = std::chrono::system_clock::to_time_t(time_point);
+    return std::ctime(&ttp);
 }
 
-int main() {
+int main(){
 
-    int foo[3] = {0,0,0};
-    std::cout << foo[2] << "\n";
-
-    test(&foo[2]);
-    std::cout << foo[2] << "\n";
-
+    std::cout << "time: " << now() << "\n";
 
     return 0;
 }

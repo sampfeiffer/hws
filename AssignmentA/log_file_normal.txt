@@ -1,0 +1,12 @@
+1 concurrent threads are supported.
+Number of threads: 5
+Filesize: 4077523
+Thread 0 launched
+Thread 1 launched
+Thread 2 launched
+Thread 3 launched
+Thread 4 launched
+Back in main thread.
+Jarque_bera value: 3367
+Probability that the returns are normally distributed: 0
+Time elapsed - total program: 0.384 seconds

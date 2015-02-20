@@ -1,5 +1,5 @@
-#ifndef TICK_INCLUDED
-#define TICK_INCLUDED
+#ifndef SCRUB_TICK_INCLUDED
+#define SCRUB_TICK_INCLUDED
 
 #include <iostream>
 #include <iomanip>
@@ -25,11 +25,9 @@ struct Tick
     int units;
 
     Tick(std::string tick_data); //Constructor
-    //void static_init();
-    void print();
-    void print2();
     int check_data(bool update_ref=true);
-    std::string print3();
+    std::string print();
+    void print2();
 };
 
 __thread char* Tick::start_date;
@@ -58,29 +56,6 @@ Tick::Tick(std::string tick_data)
     units = atoi(tick_data.substr(price_end+1,tick_data.find("\n",34)-price_end+1).c_str());
 
     ++counter;
-    //if (!start_time) static_init();
-
-}
-
-//void Tick::static_init()
-//{
-//    start_date = {'\0'};
-//    start_time = 0;
-//    start_price = 0;
-//    start_units = 0;
-//}
-
-void Tick::print()
-{
-    std::cout << "date: " << date << "\n";
-    std::cout << std::setprecision(12) << "time: " << time << "\n";
-    std::cout << std::setprecision(7) << "price: " << price << "\n";
-    std::cout << "units: " << units << "\n";
-}
-
-void Tick::print2()
-{
-    std::cout << counter << " " << date << ":" << time << "," << price << "," << units << " " << start_price;
 }
 
 int Tick::check_data(bool update_ref)
@@ -115,9 +90,8 @@ int Tick::check_data(bool update_ref)
     return error_num;
 }
 
-std::string Tick::print3()
+std::string Tick::print()
 {
-    //if (time<10) std::cout <<time<< "\n";
     std::stringstream text;
     double integral;
     double seconds_frac = modf(time, &integral);
@@ -135,6 +109,11 @@ std::string Tick::print3()
          << std::setfill('0') << std::setw(8) << seconds_int + seconds_frac;
     text << "," << price << "," << units;
     return text.str();
+}
+
+void Tick::print2()
+{
+    std::cout << counter << " " << date << ":" << time << "," << price << "," << units << " " << start_price;
 }
 
 bool compare_date(const Tick &obj1, const Tick &obj2)
@@ -157,4 +136,4 @@ bool compare_units(const Tick &obj1, const Tick &obj2)
     return (obj1.units < obj2.units);
 }
 
-#endif // TICK_INCLUDED
+#endif // SCRUB_TICK_INCLUDED

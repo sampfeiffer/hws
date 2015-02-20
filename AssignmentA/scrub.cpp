@@ -3,9 +3,10 @@
 #include <cstdlib>
 #include <thread>
 #include <vector>
-#include "tick.h"
+#include "scrub_tick.h"
 #include "timing.h"
-#include "process.h"
+#include "scrub_process.h"
+#include "logging.h"
 
 // Memory mapping headers.
 #include <sys/mman.h>
@@ -33,6 +34,17 @@ void copy_file(const char *from, const char *to)
 
 int main(int argc, char *argv[])
 {
+    if (argc < 3){
+        std::cout << "ERROR: program needs 2 or 3 parameters\n"
+                  << "Format is\n"
+                  << "     ./scrub.out [input_data_filename] [num_of_threads] [copy_file]\n"
+                  << "copy_file defaults to true if not specified. To not copy the file, put \"no\" as the third parameter.";
+        return 1;
+    }
+
+    std::stringstream log_text;
+    Logging logger("log_file_scrub.txt");
+
     const char *signal_filename = "signal.txt";
     bool copy_file_bool = false;
 
@@ -44,22 +56,27 @@ int main(int argc, char *argv[])
         copy_file(argv[1], signal_filename);
     }
     copy_file_time.end_timing();
+    log_text << copy_file_time.print("file copy");
+    logger.write(log_text);
 
-
+    // Start timing program
     Timing program_time;
     program_time.start_timing();
 
-    size_t filesize = getFilesize(signal_filename);
-    //Open file
-    int fd = open(signal_filename, O_RDWR, 0);
-    assert(fd != -1);
-    //Execute mmap
-    char* mapped = static_cast<char*>(mmap(NULL, filesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0));
-    assert(mapped != NULL);
+    unsigned int filesize = getFilesize(signal_filename);
+    int fd = open(signal_filename, O_RDWR, 0); //Open file
+    assert(fd != -1); // Error check
+    char* mapped = static_cast<char*>(mmap(NULL, filesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd, 0)); //Execute mmap
+    assert(mapped != NULL); // Error check
 
-    //split up file.
-    int num_threads = atoi(argv[2]);
-    std::cout << "num_threads: " << num_threads << "\n";
+    unsigned int num_threads = atoi(argv[2]);
+    unsigned int possible_threads = std::thread::hardware_concurrency();
+    log_text << possible_threads << " concurrent threads are supported.\n";
+    log_text << "Number of threads: " << num_threads << "\n";
+    log_text << "Filesize: " << filesize << "\n";
+    logger.write(log_text);
+
+    // Split up file. between threads
     std::vector<int> file_split(num_threads+1);
     for (int i=0; i<num_threads+1; ++i){
         file_split[i] = i*filesize/num_threads;
@@ -71,13 +88,18 @@ int main(int argc, char *argv[])
     // Launch threads.
     for (int i=0; i<num_threads; ++i) {
         thread[i] = std::thread(process_data, mapped, file_split[i], file_split[i+1], &noise[i]);
+        log_text << "Thread " << i << " launched\n";
+        logger.write(log_text);
     }
 
     // Join threads to the main thread of execution.
     for (int i=0; i<num_threads; ++i){
         thread[i].join();
     }
+    log_text << "Back in main thread.\n";
+    logger.write(log_text);
 
+    // Write the noise to noise.txt
     Timing noise_write_time;
     noise_write_time.start_timing();
     std::ofstream outfile;
@@ -88,32 +110,26 @@ int main(int argc, char *argv[])
     }
     outfile.close();
     noise_write_time.end_timing();
+    log_text << noise_write_time.print("noise writing");
+    logger.write(log_text);
 
-    std::cout << "filesize: " << filesize << "\n";
-    std::cout << "counter: " << total_counter << "\nbad_counter: " << Tick::bad_counter << "\n";
-
+    log_text << "counter: " << total_counter
+              << "\nbad_counter: " << Tick::bad_counter
+              << "\npercentage: " << double(Tick::bad_counter)/total_counter << "\n";
+    logger.write(log_text);
 
     //Cleanup
     int rc = munmap(mapped, filesize);
     assert(rc == 0);
     close(fd);
 
-    unsigned int n = std::thread::hardware_concurrency();
-    std::cout << n << " concurrent threads are supported.\n";
-
     if (!copy_file_bool) rename(argv[1], "signal.txt");
 
     program_time.end_timing();
 
-    copy_file_time.print("file copy");
-    noise_write_time.print("noise writing");
-    program_time.print("total program");
+    log_text << program_time.print("total program");
+    logger.write(log_text);
 
     std::cout << "\n";
     return 0;
 }
-
-// to do:
-// the window thing
-// log file
-// error catching for command line input

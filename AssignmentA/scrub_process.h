@@ -1,5 +1,5 @@
-#ifndef PROCESS_INCLUDED
-#define PROCESS_INCLUDED
+#ifndef SCRUB_PROCESS_INCLUDED
+#define SCRUB_PROCESS_INCLUDED
 
 #include <sstream>
 #include <list>
@@ -68,7 +68,7 @@ void process_data(char *mapped, int start_location, int end_location, std::strin
     for (int i=0; i<start_list.size(); ++i){
 
         if (iter->check_data(false)){
-            *noise << iter->print3() << "\n";
+            *noise << iter->print() << "\n";
         }
         ++iter;
     }
@@ -90,4 +90,4 @@ void process_data(char *mapped, int start_location, int end_location, std::strin
     total_counter += Tick::counter;
 }
 
-#endif // PROCESS_INCLUDED
+#endif // SCRUB_PROCESS_INCLUDED
