@@ -65,7 +65,7 @@ int Tick::check_data(bool update_ref)
     if (std::string(date) != std::string(start_date)) error_num+=1;
 
     // Check time
-    if (time-start_time > 2) error_num+=2;
+    if (time-start_time > 5) error_num+=2;
 
     // Check price
     if (std::abs((price-start_price)/start_price) > 0.6 || price <= 0) error_num+=4;
