@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     unsigned int possible_threads = std::thread::hardware_concurrency();
     log_text << possible_threads << " concurrent threads are supported.\n";
     log_text << "Number of threads: " << num_threads << "\n";
-    log_text << "Filesize: " << filesize << "\n";
+    log_text << "Filesize: " << filesize << " characters\n";
     logger.write(log_text);
 
     // Split up file. between threads
@@ -113,9 +113,9 @@ int main(int argc, char *argv[])
     log_text << noise_write_time.print("noise writing");
     logger.write(log_text);
 
-    log_text << "counter: " << total_counter
-              << "\nbad_counter: " << Tick::bad_counter
-              << "\npercentage: " << double(Tick::bad_counter)/total_counter << "\n";
+    log_text << "Total ticks: " << total_counter
+              << "\nNoise: " << Tick::bad_counter
+              << "\nPercentage noise: " << 100*double(Tick::bad_counter)/total_counter << "%\n";
     logger.write(log_text);
 
     //Cleanup

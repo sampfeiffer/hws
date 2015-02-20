@@ -88,6 +88,11 @@ void process_data(char *mapped, int start_location, int end_location, std::strin
         ++location;
     }
     total_counter += Tick::counter;
+
+    for (int i=0; i<16; ++i){
+        std::cout << Tick::bad_vector[i] << " ";
+    }
+    std::cout << "\n";
 }
 
 #endif // SCRUB_PROCESS_INCLUDED
