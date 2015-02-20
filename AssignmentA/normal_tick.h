@@ -1,5 +1,5 @@
-#ifndef TICK_INCLUDED
-#define TICK_INCLUDED
+#ifndef NORMAL_TICK_INCLUDED
+#define NORMAL_TICK_INCLUDED
 
 #include <iostream>
 #include <iomanip>
@@ -22,4 +22,4 @@ Tick::Tick(std::string tick_data)
     price_end = tick_data.find(",",27);
     price = atof(tick_data.substr(25,price_end-25).c_str());
 }
-#endif // TICK_INCLUDED
+#endif // NORMAL_TICK_INCLUDED

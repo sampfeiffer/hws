@@ -1,4 +1,5 @@
 #include <thread>
+#include <numeric>
 #include "normal_tick.h"
 #include "timing.h"
 #include "normal_process.h"
@@ -40,15 +41,23 @@ int main(int argc, char *argv[])
 
     std::thread thread[num_threads];
 
+    std::vector<int> jb_vector(num_threads,0);
+
     // Launch threads.
     for (int i=0; i<num_threads; ++i) {
-        thread[i] = std::thread(normal_process_data, mapped, file_split[i], file_split[i+1]);
+        thread[i] = std::thread(normal_process_data, mapped, file_split[i], file_split[i+1], &jb_vector[i]);
     }
 
     // Join threads to the main thread of execution.
     for (int i=0; i<num_threads; ++i){
         thread[i].join();
     }
+
+    int jarque_bera =std::accumulate(jb_vector.begin(),jb_vector.end(),0);
+    float prob = exp(-jarque_bera/2.0);
+
+    std::cout << "total jb: " << jarque_bera << "\n";
+    std::cout << "Probability that the returns are normally distributed: " << prob << "\n";
 
     std::cout << "filesize: " << filesize << "\n";
 
@@ -68,6 +77,5 @@ int main(int argc, char *argv[])
 }
 
 // to do:
-// the window thing
 // log file
 // error catching for command line input
