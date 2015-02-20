@@ -65,23 +65,24 @@ int Tick::check_data(bool update_ref)
     if (std::string(date) != std::string(start_date)) error_num+=1;
 
     // Check time
-    if (time-start_time > 5) error_num+=2;
+    if (std::abs(time-start_time) > 2) error_num+=2;
 
     // Check for unrealistic price jumps
     if (std::abs((price-start_price)/(start_price*(time-start_time))) > 10 || price <= 0) error_num+=4;
 
     // Check units
-    if (units < 0 || units > 1000*start_units) error_num+=8;
+    if (units <= 0 || units > 5000*long(start_units)) error_num+=8;
 
     if (error_num){
         ++bad_counter;
         ++bad_vector[error_num];
         //print2();
-        //std::cout << " " << error_num << " " << start_date << "\n";
+        //std::cout << counter << " " << error_num << " " << units << " " << 5000*long(start_units) << "\n";
     }
 
     // If data is good. Update static data.
-    else if (counter%100 == 0 && update_ref){
+    //else if (counter%100 == 0 && update_ref){
+    else if (update_ref){
         start_time = time;
         start_price = price;
         start_units = units;
