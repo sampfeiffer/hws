@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     }
 
     std::thread thread[num_threads];
-    std::vector<int> jb_vector(num_threads,0);
+    std::vector<long> jb_vector(num_threads,0);
 
     // Launch threads.
     for (int i=0; i<num_threads; ++i) {

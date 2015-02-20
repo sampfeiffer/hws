@@ -24,7 +24,7 @@ void get_line_normal(char *mapped, std::stringstream &ss, int &location, int &en
 
 // This is the meat of the program. It processes the data and finds the Jarque-Bera number
 // for the normality testing.
-void normal_process_data(char *mapped, int start_location, int end_location, int *jb)
+void normal_process_data(char *mapped, int start_location, int end_location, long *jb)
 {
     int location = start_location;
     std::stringstream ss;
