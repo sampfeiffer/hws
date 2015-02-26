@@ -1,88 +1,45 @@
-#include <thread>
-#include <numeric>
-#include <sstream>
-#include <vector>
-#include "normal_functions.h"
-#include "timing.h"
-#include "logging.h"
+#include "parameters.h"
 
-// Memory mapping headers.
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <assert.h>
 
 int main(int argc, char *argv[])
 {
-    // Start timing
-    Timing program_time;
-    program_time.start_timing();
+    srand(time(NULL)); //Set the seed for the random number generator
+    std::string parameters_filename = "parameters.txt";
+    std::string bank_data_filename = "bank_data.txt";
 
-    std::stringstream log_text;
-    Logging logger("log_file_normal.txt");
+    Parameters params("parameters.txt");
 
-    if (argc < 3){
-        std::cout << "ERROR: program needs 2 parameters\n"
-                  << "Format is\n"
-                  << "     ./normal.out [input_data_filename] [num_of_threads]\n";
-        return 1;
+    std::ofstream bank_data;
+    bank_data.open(bank_data_filename);
+    if (!bank_data.is_open()){
+        std::cout << "ERROR: " << bank_data_filename << " bank_data.txt file could not be opened. Exiting.\n";
+        exit(1);
     }
 
-    unsigned int filesize = getFilesize(argv[1]);
-    int fd = open(argv[1], O_RDONLY, 0); //Open file
-    assert(fd != -1); //Error check
-    char* mapped = static_cast<char*>(mmap(NULL, filesize, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0)); //Execute mmap
-    assert(mapped != NULL); //Error check
+    float hazard_rate;
+    int cp_fx;
+    int cp_swaps;
 
-    unsigned int num_threads = atoi(argv[2]);
-    unsigned int possible_threads = std::thread::hardware_concurrency();
-    log_text << possible_threads << " concurrent threads are supported.\n";
-    log_text << "Number of threads: " << num_threads << "\n";
-    log_text << "Filesize: " << filesize << "\n\n";
-    logger.write(log_text);
+    for (int i=1; i<=params.counterparty_num; ++i){
+        hazard_rate = 0.02 + (rand()%5)/50.0; //Uniformly random hazard rate
+        if(rand()%2){
+            cp_fx = 1;
+            cp_swaps = 0;
+            --params.fx_num;
+        }
+        else {
+            cp_fx = 0;
+            cp_swaps = 1;
+            --params.swap_num;
+        }
 
-    // Split up file. between threads
-    std::vector<int> file_split(num_threads+1);
-    for (int i=0; i<num_threads+1; ++i){
-        file_split[i] = i*filesize/num_threads;
+        std::cout << i << "," << hazard_rate << "," << cp_fx << "," << cp_swaps <<"\n";
+
     }
 
-    std::thread thread[num_threads];
-    std::vector<long> jb_vector(num_threads,0);
+    params.print();
 
-    // Launch threads.
-    for (int i=0; i<num_threads; ++i) {
-        thread[i] = std::thread(normal_process_data, mapped, file_split[i], file_split[i+1], &jb_vector[i]);
-        log_text << "Thread " << i << " launched\n";
-        logger.write(log_text, true);
-    }
 
-    // Join threads to the main thread of execution.
-    for (int i=0; i<num_threads; ++i){
-        thread[i].join();
-    }
-    log_text << "Back in main thread.\n";
-    logger.write(log_text, true);
-
-    int jarque_bera =std::accumulate(jb_vector.begin(),jb_vector.end(),0);
-    float prob = exp(-jarque_bera/2.0);
-
-    log_text << "Jarque_bera value: " << jarque_bera << "\n";
-    logger.write(log_text);
-    log_text << "Probability that the returns are normally distributed: " << prob << "\n";
-    std::cout << log_text.str() << "\n";
-    logger.write(log_text);
-
-    //Cleanup
-    int rc = munmap(mapped, filesize);
-    assert(rc == 0);
-    close(fd);
-
-    program_time.end_timing();
-    log_text << program_time.print("total program");
-    logger.write(log_text);
-
-    std::cout << "\n";
+    bank_data.close();
     return 0;
 }
