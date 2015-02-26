@@ -1,3 +1,3 @@
-Number of counterparties,10
-Number of fx deals,10
-Number of swap deals,10
+Number of counterparties,1000
+Number of fx deals,100000
+Number of swap deals,100000

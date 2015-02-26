@@ -1,45 +1,168 @@
+#include <random>
 #include "parameters.h"
+#include <cmath>
 
-
-int main(int argc, char *argv[])
+void deal_distribution(Parameters &params)
 {
-    srand(time(NULL)); //Set the seed for the random number generator
-    std::string parameters_filename = "parameters.txt";
-    std::string bank_data_filename = "bank_data.txt";
+    std::string sizes_filename="sizes.txt", counterparty_deals_filename="counterparty_deals.txt";
+    std::ofstream sizes, counterparty_deals;
+    const int buckets = 5;
+    int bucket_size[buckets], fx_dist[buckets], swap_dist[buckets];
+    std::default_random_engine generator;
+    std::uniform_real_distribution<double> uniform(0.0,1.0);
 
-    Parameters params("parameters.txt");
+    // Assign bucket sizes
+    int bucket_total = 0;
+    std::binomial_distribution<int> distribution(params.counterparty_num,0.2);
+    for (int i=0; i<buckets-1; ++i){
+        bucket_size[i] = distribution(generator);
+        bucket_total += bucket_size[i];
+    }
+    bucket_size[buckets-1] = params.counterparty_num - bucket_total;
 
-    std::ofstream bank_data;
-    bank_data.open(bank_data_filename);
-    if (!bank_data.is_open()){
-        std::cout << "ERROR: " << bank_data_filename << " bank_data.txt file could not be opened. Exiting.\n";
+    sizes.open(sizes_filename);
+    if (!sizes.is_open()){
+        std::cout << "ERROR: " << sizes_filename << " sizes.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+    sizes << "Bucket Sizes: ";
+    for (int i=0; i<buckets; ++i){
+        sizes << bucket_size[i] << " ";
+    }
+    sizes << "\n";
+
+    //Put aside a mix of counterparty_num (1,000,000) fx and swaps to
+    //make sure that each counterparty has a least one deal.
+    std::binomial_distribution<int> distribution_aside(params.counterparty_num,0.5);
+    int fx_aside = distribution_aside(generator);
+    int swap_aside = params.counterparty_num - fx_aside;
+    double fx_cutoff = double(fx_aside)/params.counterparty_num;
+
+
+
+    //Assign number of fx and swaps in each bucket.
+    int fx_total = params.fx_num-fx_aside;
+    int swap_total = params.swap_num-swap_aside;
+    for(int i=0; i<buckets-1; ++i){
+        std::binomial_distribution<int> distribution2(params.fx_num,pow(2,i)/31.0);
+        std::binomial_distribution<int> distribution3(params.swap_num,pow(2,i)/31.0);
+        fx_dist[i] = distribution2(generator);
+        swap_dist[i] = distribution3(generator);
+        fx_total -= fx_dist[i];
+        swap_total -= swap_dist[i];
+    }
+    fx_dist[buckets-1] = fx_total;
+    swap_dist[buckets-1] = swap_total;
+
+    sizes << "FX Sizes: ";
+    for (int i=0; i<buckets; ++i){
+        sizes << fx_dist[i] << " ";
+    }
+    sizes << "\nSwap Sizes: ";
+    for (int i=0; i<buckets; ++i){
+        sizes << swap_dist[i] << " ";
+    }
+    sizes.close();
+
+    int num_of_deals, fx_start_size, swap_start_size;
+    int counterparty_id = 1, fx_id = 1, swap_id = params.fx_num+1;
+
+
+    counterparty_deals.open(counterparty_deals_filename);
+    if (!counterparty_deals.is_open()){
+        std::cout << "ERROR: " << counterparty_deals_filename << " counterparty_deals.txt file could not be opened. Exiting.\n";
         exit(1);
     }
 
-    float hazard_rate;
-    int cp_fx;
-    int cp_swaps;
+    // In each bucket...
+    for (int i=0; i<buckets; ++i){
+        // In each counterparty...
+        fx_start_size = fx_dist[i];
+        swap_start_size = swap_dist[i];
+        for (int j=0; j<bucket_size[i]; ++j){
+            // FX deals
+            if (fx_dist[i] > 0){
+                if (j<bucket_size[i]-1){
+                    std::binomial_distribution<int> distribution_fx(fx_start_size,1.0/bucket_size[i]);
+                    num_of_deals = std::min(distribution_fx(generator),fx_dist[i]);
+                }
+                else {
+                    num_of_deals = fx_dist[i];
+                }
+                for (int k=0; k<num_of_deals; ++k){
+                    //std::cout << counterparty_id << " " << fx_id << " bucket" << i+1 << " fxleft" << fx_dist[i] << "\n";
+                    counterparty_deals << counterparty_id << " " << fx_id << "\n";
+                    ++fx_id;
+                    --fx_dist[i];
+                }
+            }
 
-    for (int i=1; i<=params.counterparty_num; ++i){
-        hazard_rate = 0.02 + (rand()%5)/50.0; //Uniformly random hazard rate
-        if(rand()%2){
-            cp_fx = 1;
-            cp_swaps = 0;
-            --params.fx_num;
-        }
-        else {
-            cp_fx = 0;
-            cp_swaps = 1;
-            --params.swap_num;
-        }
+            // Figure out if the single necessary deal is an fx or swap.
+            if (!swap_aside || (uniform(generator) < fx_cutoff && fx_aside)){
+                //std::cout << counterparty_id << " " << fx_id << " bucket" << i+1 << " fxleft" << "ASIDE" << "\n";
+                counterparty_deals << counterparty_id << " " << fx_id << "\n";
+                ++fx_id;
+                --fx_aside;
+            }
+            else{
+                //std::cout << counterparty_id << " " << swap_id << " bucket" << i+1 << " swapleft" << "ASIDE" << "\n";
+                counterparty_deals << counterparty_id << " " << swap_id << "\n";
+                ++swap_id;
+                --swap_aside;
+            }
 
-        std::cout << i << "," << hazard_rate << "," << cp_fx << "," << cp_swaps <<"\n";
+            // Swap deals
+            if (swap_dist[i] > 0){
+                if (j<bucket_size[i]-1){
+                    std::binomial_distribution<int> distribution_swap(swap_start_size,1.0/bucket_size[i]);
+                    num_of_deals = std::min(distribution_swap(generator), swap_dist[i]);
+                }
+                else {
+                    num_of_deals = swap_dist[i];
+                }
+                for (int k=0; k<num_of_deals; ++k){
+                    //std::cout << counterparty_id << " " << swap_id << " bucket" << i+1 << " swapleft" << swap_dist[i] << "\n";
+                    counterparty_deals << counterparty_id << " " << swap_id << "\n";
+                    ++swap_id;
+                    --swap_dist[i];
+                }
+            }
+
+            ++counterparty_id;
+        }
 
     }
 
+    counterparty_deals.close();
+}
+
+void assign_deal_details()
+{
+    std::string deal_details_filename="deal_details.txt";
+    std::ofstream deal_details;
+    deal_details.open(deal_details_filename);
+    if (!deal_details.is_open()){
+        std::cout << "ERROR: " << deal_details_filename << " deal_details.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+
+
+
+    deal_details.close();
+}
+
+int main(int argc, char *argv[])
+{
+    std::string parameters_filename = "parameters.txt";
+
+    Parameters params("parameters.txt");
     params.print();
+    std::cout << "\n";
 
+    deal_distribution(params);
 
-    bank_data.close();
+    assign_deal_details();
+
+    std::cout << "\n";
     return 0;
 }
