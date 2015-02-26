@@ -7,9 +7,10 @@
 struct Parameters{
 
     std::ifstream parameters_infile;
-    int counterparty_num;
-    int fx_num;
-    int swap_num;
+    int counterparty_num, fx_num, swap_num;
+    float time_horizon, step_size, recovery_rate, eur_usd_vol,
+          beta0, beta1, beta2, tau;
+
 
     Parameters(std::string parameters_filename);
     const char* get_param();
@@ -27,6 +28,14 @@ Parameters::Parameters(std::string parameters_filename)
     counterparty_num = atoi(get_param());
     fx_num = atoi(get_param());
     swap_num = atoi(get_param());
+    time_horizon = atof(get_param());
+    step_size = atof(get_param());
+    recovery_rate = atof(get_param());
+    eur_usd_vol = atof(get_param());
+    beta0 = atof(get_param());
+    beta1 = atof(get_param());
+    beta2 = atof(get_param());
+    tau = atof(get_param());
 
     parameters_infile.close();
 }
@@ -41,9 +50,18 @@ const char* Parameters::get_param()
 
 void Parameters::print()
 {
-    std::cout << "Num of counterparties: " << counterparty_num
+    std::cout << "\nParameters"
+              << "\nNum of counterparties: " << counterparty_num
               << "\nNum of FX: " << fx_num
-              << "\nNum of swaps: " << swap_num << "\n";
+              << "\nNum of swaps: " << swap_num
+              << "\nTime horizon: " << time_horizon
+              << "\nTime step size: " << step_size
+              << "\nRecovery rate: " << recovery_rate
+              << "\nEUR/USD volatility: " << eur_usd_vol
+              << "\nbeta0: " << beta0
+              << "\nbeta1: " << beta1
+              << "\nbeta2: " << beta2
+              << "\ntau: " << tau << "\n";
 }
 
 #endif // PARAMETERS_INCLUDED

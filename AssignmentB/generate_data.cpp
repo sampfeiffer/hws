@@ -136,7 +136,7 @@ void deal_distribution(Parameters &params)
     counterparty_deals.close();
 }
 
-void assign_deal_details()
+void assign_deal_details(Parameters &params)
 {
     std::string deal_details_filename="deal_details.txt";
     std::ofstream deal_details;
@@ -146,22 +146,27 @@ void assign_deal_details()
         exit(1);
     }
 
-
+    // Randomly assign fx and swap parameters according to the specification
+    for (int fx_id=1; fx_id<=params.fx_num; ++fx_id){
+        deal_details << fx_id << " " << (rand()%400000) + 800000 << " " << ((rand()%10<6)?"l":"s") << "\n";
+    }
+    for (int swap_id=params.fx_num+1; swap_id<=params.fx_num+params.swap_num; ++swap_id){
+        deal_details << swap_id << " " << ((rand()%2)?"u":"e") << " " << (rand()%400000) + 800000 << " " << ((rand()%7)+2)/100.0 << " " << ((rand()%20<9)?"l":"s") << "\n";
+    }
 
     deal_details.close();
 }
 
 int main(int argc, char *argv[])
 {
+    srand (time(NULL));
     std::string parameters_filename = "parameters.txt";
 
-    Parameters params("parameters.txt");
+    Parameters params(parameters_filename);
     params.print();
-    std::cout << "\n";
 
     deal_distribution(params);
-
-    assign_deal_details();
+    assign_deal_details(params);
 
     std::cout << "\n";
     return 0;

@@ -1,3 +1,11 @@
-Number of counterparties,1000
-Number of fx deals,100000
-Number of swap deals,100000
+Number of counterparties,20
+Number of fx deals,100
+Number of swap deals,100
+Horizon in years,2
+Timestep size,0.1
+Recovery rate,0.3
+EUR/USD vol,0.2
+Nelson-Siegel beta0,0.04
+Nelson-Siegel beta1,-0.03
+Nelson-Siegel beta2,-0.05
+Nelson-Siegel tau,1.43
