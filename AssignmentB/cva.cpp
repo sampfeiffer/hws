@@ -11,17 +11,28 @@ float nelson_siegel(float t, double beta0, float beta1, float beta2, float tau)
 
 int main(int argc, char *argv[])
 {
-    std::string parameters_filename="parameters.txt", state0_filename="state0.txt",
+    std::string parameters_filename="parameters.txt", state0_filename="state0.txt", sizes_filename="sizes.txt",
                 counterparty_deals_filename="counterparty_deals.txt",
                 fx_details_filename="fx_details.txt", swap_details_filename="swap_details.txt";
     std::default_random_engine generator;
-    std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile;
+    std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile, sizes_infile;
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename);
     params.print();
     State0 initial_state(state0_filename);
     initial_state.print();
+
+    int sizes[5];
+    sizes_infile.open(sizes_filename);
+    if (!sizes_infile.is_open()){
+        std::cout << "ERROR: sizes.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+    for (int i=0; i<5; ++i){
+        sizes_infile >> sizes[i];
+    }
+    sizes_infile.close();
 
     // Generate the path of the fx rate and Nelson-Siegel parameters
     std::normal_distribution<double> normal_fx(0.0,params.eur_usd_vol*sqrt(params.step_size/365));
@@ -49,12 +60,12 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    int current_id=1, deal_id;;
+    int current_id=1, deal_id, id=1, deals_handled=0;
     std::vector<Counterparty> cp_vector;
     std::string deal_text;
     counterparty_deals_infile >> deal_id;
 
-    for (int id=1; id<=3; ++id){
+    while (deals_handled <= params.deals_at_once){
         Counterparty cp(id);
         do{
             counterparty_deals_infile >> deal_id;
@@ -66,17 +77,20 @@ int main(int argc, char *argv[])
                 getline(swap_details_infile, deal_text);
                 cp.add_swap(deal_text);
             }
+            ++deals_handled;
             counterparty_deals_infile >> current_id;
         } while(current_id == id);
         cp_vector.push_back(cp);
+        ++id;
     }
 
 //    std::cout << "size " << cp_vector.size() << "\n";
 //    for (unsigned int i=0; i<cp_vector.size(); ++i){
 //        cp_vector[i].print();
 //    }
-
-    for (int i=1; i<num_of_steps; ++i){
+//    std::cout << "steps " << num_of_steps << "\n";
+    //for (int i=1; i<=num_of_steps; ++i){
+    for (int i=1; i<=1; ++i){
         //generate current state of the world
         current_fx_rate += normal_fx(generator);
         current_beta0 = params.beta0 + params.mean_revert*(params.beta0-current_beta0) + normal_ns(generator);
@@ -91,18 +105,13 @@ int main(int argc, char *argv[])
                   << nelson_siegel(20,current_beta0,current_beta1,current_beta2,current_tau) << "\n";*/
 
 
+        //cp_vector[0].fx_deals[0].print();
+        std::cout << "value " << cp_vector[0].fx_deals[0].value(initial_state.eur_usd_rate, current_fx_rate) << "\n";
+
     }
     counterparty_deals_infile.close();
     fx_details_infile.close();
     swap_details_infile.close();
-
-//    Fx test("2 1187167 s");
-//    test.print();
-//
-//    Swap test2("2028 u 1075331 0.08 l");
-//    test2.print();
-
-
 
     std::cout << "\n";
 

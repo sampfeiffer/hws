@@ -11,3 +11,4 @@ Nelson-Siegel beta2,-0.0008
 Nelson-Siegel tau,2.798
 Nelson-Siegel mean reversion rate,0.5
 Nelson-Siegel vol,0.01
+How many deals should be handled at a time,11

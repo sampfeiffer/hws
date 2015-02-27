@@ -36,16 +36,16 @@ void Counterparty::add_swap(std::string deal_text)
 
 void Counterparty::print()
 {
-    std::cout << "\nCounterparty id: " << cp_id
+    std::cout << "Counterparty id: " << cp_id
               << "\nHazard rate " << hazard_rate << "\n";
 
     std::cout << "FX deals:\n";
     for (unsigned int i=0; i<fx_deals.size(); ++i){
-        fx_deals[i].print();
+        fx_deals[i].print_short();
     }
-    std::cout << "\nSwaps deals:\n";
+    std::cout << "Swaps deals:\n";
     for (unsigned int i=0; i<swap_deals.size(); ++i){
-        swap_deals[i].print();
+        swap_deals[i].print_short();
     }
     std::cout << "\n";
 }

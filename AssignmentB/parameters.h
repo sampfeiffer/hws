@@ -7,7 +7,7 @@
 struct Parameters{
 
     std::ifstream parameters_infile;
-    int counterparty_num, fx_num, swap_num;
+    int counterparty_num, fx_num, swap_num, deals_at_once;
     float time_horizon, step_size, recovery_rate, eur_usd_vol, ns_vol, mean_revert;
     double beta0, beta1, beta2, tau;
 
@@ -38,6 +38,7 @@ Parameters::Parameters(std::string parameters_filename)
     tau = atof(get_param());
     mean_revert = atof(get_param());
     ns_vol = atof(get_param());
+    deals_at_once = atoi(get_param());
 
     parameters_infile.close();
 }
@@ -65,7 +66,8 @@ void Parameters::print()
               << "\nbeta2: " << beta2
               << "\ntau: " << tau
               << "\nMean reversion rate: " << mean_revert
-              << "\nNelson-Siegel volatility: " << ns_vol << "\n";
+              << "\nNelson-Siegel volatility: " << ns_vol
+              << "\nDeals handled at once: " << deals_at_once << "\n";
 }
 
 #endif // PARAMETERS_INCLUDED

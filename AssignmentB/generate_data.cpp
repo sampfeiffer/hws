@@ -25,11 +25,10 @@ void deal_distribution(Parameters &params)
         std::cout << "ERROR: " << sizes_filename << " sizes.txt file could not be opened. Exiting.\n";
         exit(1);
     }
-    sizes << "Bucket Sizes: ";
     for (int i=0; i<buckets; ++i){
         sizes << bucket_size[i] << " ";
     }
-    sizes << "\n";
+    sizes.close();
 
     //Put aside a mix of counterparty_num (1,000,000) fx and swaps to
     //make sure that each counterparty has a least one deal.
@@ -54,15 +53,6 @@ void deal_distribution(Parameters &params)
     fx_dist[buckets-1] = fx_total;
     swap_dist[buckets-1] = swap_total;
 
-    sizes << "FX Sizes: ";
-    for (int i=0; i<buckets; ++i){
-        sizes << fx_dist[i] << " ";
-    }
-    sizes << "\nSwap Sizes: ";
-    for (int i=0; i<buckets; ++i){
-        sizes << swap_dist[i] << " ";
-    }
-    sizes.close();
 
     int num_of_deals, fx_start_size, swap_start_size;
     int counterparty_id = 1, fx_id = 1, swap_id = params.fx_num+1;

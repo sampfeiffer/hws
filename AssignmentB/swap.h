@@ -12,6 +12,7 @@ struct Swap{
 
     Swap(std::string deal_text); //Constructor
     void print();
+    void print_short();
 
 };
 
@@ -33,6 +34,15 @@ void Swap::print()
               << "\nnotional " << notional
               << "\nfixed_rate " << fixed_rate
               << "\nposition " << position << "\n";
+}
+
+void Swap::print_short()
+{
+    std::cout << "    " << swap_id
+              << " " << denomination
+              << " " << notional
+              << " " << fixed_rate
+              << " " << position << "\n";
 }
 
 #endif // SWAP_INCLUDED
