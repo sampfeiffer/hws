@@ -1,6 +1,8 @@
 #include <random>
+#include <vector>
 #include "parameters.h"
 #include "state0.h"
+#include "counterparty.h"
 
 float nelson_siegel(float t, double beta0, float beta1, float beta2, float tau)
 {
@@ -9,8 +11,11 @@ float nelson_siegel(float t, double beta0, float beta1, float beta2, float tau)
 
 int main(int argc, char *argv[])
 {
-    std::string parameters_filename="parameters.txt", state0_filename="state0.txt";
+    std::string parameters_filename="parameters.txt", state0_filename="state0.txt",
+                counterparty_deals_filename="counterparty_deals.txt",
+                fx_details_filename="fx_details.txt", swap_details_filename="swap_details.txt";
     std::default_random_engine generator;
+    std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile;
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename);
@@ -28,6 +33,49 @@ int main(int argc, char *argv[])
     double current_beta2 = params.beta2;
     double current_tau = params.tau;
 
+    counterparty_deals_infile.open(counterparty_deals_filename);
+    if (!counterparty_deals_infile.is_open()){
+        std::cout << "ERROR: counterparty_deals.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+    fx_details_infile.open(fx_details_filename);
+    if (!fx_details_infile.is_open()){
+        std::cout << "ERROR: fx_details.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+    swap_details_infile.open(swap_details_filename);
+    if (!swap_details_infile.is_open()){
+        std::cout << "ERROR: swap_details.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+
+    int current_id=1, deal_id;;
+    std::vector<Counterparty> cp_vector;
+    std::string deal_text;
+    counterparty_deals_infile >> deal_id;
+
+    for (int id=1; id<=3; ++id){
+        Counterparty cp(id);
+        do{
+            counterparty_deals_infile >> deal_id;
+            if (deal_id<params.fx_num){
+                getline(fx_details_infile, deal_text);
+                cp.add_fx(deal_text);
+            }
+            else {
+                getline(swap_details_infile, deal_text);
+                cp.add_swap(deal_text);
+            }
+            counterparty_deals_infile >> current_id;
+        } while(current_id == id);
+        cp_vector.push_back(cp);
+    }
+
+//    std::cout << "size " << cp_vector.size() << "\n";
+//    for (unsigned int i=0; i<cp_vector.size(); ++i){
+//        cp_vector[i].print();
+//    }
+
     for (int i=1; i<num_of_steps; ++i){
         //generate current state of the world
         current_fx_rate += normal_fx(generator);
@@ -44,6 +92,16 @@ int main(int argc, char *argv[])
 
 
     }
+    counterparty_deals_infile.close();
+    fx_details_infile.close();
+    swap_details_infile.close();
+
+//    Fx test("2 1187167 s");
+//    test.print();
+//
+//    Swap test2("2028 u 1075331 0.08 l");
+//    test2.print();
+
 
 
     std::cout << "\n";

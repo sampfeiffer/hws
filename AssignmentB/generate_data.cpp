@@ -138,23 +138,30 @@ void deal_distribution(Parameters &params)
 
 void assign_deal_details(Parameters &params)
 {
-    std::string deal_details_filename="deal_details.txt";
-    std::ofstream deal_details;
-    deal_details.open(deal_details_filename);
-    if (!deal_details.is_open()){
-        std::cout << "ERROR: " << deal_details_filename << " deal_details.txt file could not be opened. Exiting.\n";
+    std::string fx_details_filename="fx_details.txt", swap_details_filename="swap_details.txt";
+    std::ofstream fx_details, swap_details;
+    fx_details.open(fx_details_filename);
+    if (!fx_details.is_open()){
+        std::cout << "ERROR: fx_details.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+
+    swap_details.open(swap_details_filename);
+    if (!swap_details.is_open()){
+        std::cout << "ERROR: swap_details.txt file could not be opened. Exiting.\n";
         exit(1);
     }
 
     // Randomly assign fx and swap parameters according to the specification
     for (int fx_id=1; fx_id<=params.fx_num; ++fx_id){
-        deal_details << fx_id << " " << (rand()%400000) + 800000 << " " << ((rand()%10<6)?"l":"s") << "\n";
+        fx_details << fx_id << " " << (rand()%400000) + 800000 << " " << ((rand()%10<6)?"l":"s") << "\n";
     }
     for (int swap_id=params.fx_num+1; swap_id<=params.fx_num+params.swap_num; ++swap_id){
-        deal_details << swap_id << " " << ((rand()%2)?"u":"e") << " " << (rand()%400000) + 800000 << " " << ((rand()%7)+2)/100.0 << " " << ((rand()%20<9)?"l":"s") << "\n";
+        swap_details << swap_id << " " << ((rand()%2)?"u":"e") << " " << (rand()%400000) + 800000 << " " << ((rand()%7)+2)/100.0 << " " << ((rand()%20<9)?"l":"s") << "\n";
     }
 
-    deal_details.close();
+    fx_details.close();
+    swap_details.close();
 }
 
 int main(int argc, char *argv[])
