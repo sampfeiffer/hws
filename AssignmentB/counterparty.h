@@ -14,14 +14,13 @@ struct Counterparty{
     void add_fx(std::string deal_text);
     void add_swap(std::string deal_text);
     void print();
-
 };
 
 // Constructor
 Counterparty::Counterparty(int cp_id_, float hazard_rate_)
 {
     cp_id = cp_id_;
-    hazard_rate = hazard_rate_; //change!!
+    hazard_rate = hazard_rate_;
 }
 
 void Counterparty::add_fx(std::string deal_text)

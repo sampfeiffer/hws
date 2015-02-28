@@ -34,9 +34,7 @@ void Fx::print()
 
 void Fx::print_short()
 {
-    std::cout << "    " << fx_id
-              << " " << notional
-              << " " << position << "\n";
+    std::cout << "    " << fx_id << " " << notional << " " << position << "\n";
 }
 
 float Fx::value(double fx_rate_beg, double fx_rate_cur)

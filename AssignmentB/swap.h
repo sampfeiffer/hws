@@ -38,11 +38,7 @@ void Swap::print()
 
 void Swap::print_short()
 {
-    std::cout << "    " << swap_id
-              << " " << denomination
-              << " " << notional
-              << " " << fixed_rate
-              << " " << position << "\n";
+    std::cout << "    " << swap_id << " " << denomination << " " << notional << " " << fixed_rate << " " << position << "\n";
 }
 
 #endif // SWAP_INCLUDED

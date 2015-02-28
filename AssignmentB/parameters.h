@@ -6,54 +6,67 @@
 
 struct Parameters{
 
-    std::ifstream parameters_infile;
+    std::ifstream parameters_infile, state0_infile;
+    float eur_usd_rate;
     int counterparty_num, fx_num, swap_num, deals_at_once;
     float time_horizon, step_size, recovery_rate, eur_usd_vol, amer_alphas[4], amer_sigmas[4], euro_alphas[4], euro_sigmas[4];
     double amer_betas[4], euro_betas[4];
 
 
-    Parameters(std::string parameters_filename);
-    const char* get_param();
+    Parameters(std::string parameters_filename, std::string state0_filename);
+    const char* get_param(std::ifstream &infile);
     void print();
 };
 
-Parameters::Parameters(std::string parameters_filename)
+Parameters::Parameters(std::string parameters_filename, std::string state0_filename)
 {
+    state0_infile.open(state0_filename);
+    if (!state0_infile.is_open()){
+        std::cout << "ERROR: state0.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+
+    eur_usd_rate = atof(get_param(state0_infile));
+    state0_infile.close();
+
     parameters_infile.open(parameters_filename);
     if (!parameters_infile.is_open()){
         std::cout << "ERROR: parameters.txt file could not be opened. Exiting.\n";
         exit(1);
     }
 
-    counterparty_num = atoi(get_param());
-    fx_num = atoi(get_param());
-    swap_num = atoi(get_param());
-    time_horizon = atof(get_param());
-    step_size = atof(get_param());
-    recovery_rate = atof(get_param());
-    eur_usd_vol = atof(get_param());
-    for (int i=0; i<4; ++i) amer_betas[i] = atof(get_param());
-    for (int i=0; i<4; ++i) amer_alphas[i] = atof(get_param());
-    for (int i=0; i<4; ++i) amer_sigmas[i] = atof(get_param());
-    for (int i=0; i<4; ++i) euro_betas[i] = atof(get_param());
-    for (int i=0; i<4; ++i) euro_alphas[i] = atof(get_param());
-    for (int i=0; i<4; ++i) euro_sigmas[i] = atof(get_param());
-    deals_at_once = atoi(get_param());
+    counterparty_num = atoi(get_param(parameters_infile));
+    fx_num = atoi(get_param(parameters_infile));
+    swap_num = atoi(get_param(parameters_infile));
+    time_horizon = atof(get_param(parameters_infile));
+    step_size = atof(get_param(parameters_infile));
+    recovery_rate = atof(get_param(parameters_infile));
+    eur_usd_vol = atof(get_param(parameters_infile));
+    for (int i=0; i<4; ++i) amer_betas[i] = atof(get_param(parameters_infile));
+    for (int i=0; i<4; ++i) amer_alphas[i] = atof(get_param(parameters_infile));
+    for (int i=0; i<4; ++i) amer_sigmas[i] = atof(get_param(parameters_infile));
+    for (int i=0; i<4; ++i) euro_betas[i] = atof(get_param(parameters_infile));
+    for (int i=0; i<4; ++i) euro_alphas[i] = atof(get_param(parameters_infile));
+    for (int i=0; i<4; ++i) euro_sigmas[i] = atof(get_param(parameters_infile));
+    deals_at_once = atoi(get_param(parameters_infile));
 
     parameters_infile.close();
 }
 
-const char* Parameters::get_param()
+const char* Parameters::get_param(std::ifstream &infile)
 {
     std::string text;
-    getline(parameters_infile, text, ',');
-    getline(parameters_infile, text);
+    getline(infile, text, ',');
+    getline(infile, text);
     return text.c_str();
 }
 
 void Parameters::print()
 {
-    std::cout << "\nParameters"
+    std::cout << "\nInitial State of the world"
+              << "\nEUR/USD rate: " << eur_usd_rate
+
+              << "\n\nParameters"
               << "\nNum of counterparties: " << counterparty_num
               << "\nNum of FX: " << fx_num
               << "\nNum of swaps: " << swap_num

@@ -157,9 +157,9 @@ void assign_deal_details(Parameters &params)
 int main(int argc, char *argv[])
 {
     srand (time(NULL));
-    std::string parameters_filename = "parameters.txt";
+    std::string parameters_filename = "parameters.txt", state0_filename="state0.txt";
 
-    Parameters params(parameters_filename);
+    Parameters params(parameters_filename, state0_filename);
     params.print();
 
     deal_distribution(params);
