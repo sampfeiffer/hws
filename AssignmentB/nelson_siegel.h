@@ -30,6 +30,7 @@ NelsonSiegel::NelsonSiegel(float step_size_, double betas_beg_[], float alphas_[
 
 double NelsonSiegel::yield(float t)
 {
+    if (t==0) return 0;
     return betas[0] + betas[1]*(1-exp(-t/betas[3]))/(t/betas[3]) + betas[2]*((1-exp(-t/betas[3]))/(t/betas[3])-exp(-t/betas[3]));
 }
 

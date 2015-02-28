@@ -147,7 +147,7 @@ void assign_deal_details(Parameters &params)
         fx_details << fx_id << " " << (rand()%400000) + 800000 << " " << ((rand()%10<6)?"l":"s") << "\n";
     }
     for (int swap_id=params.fx_num+1; swap_id<=params.fx_num+params.swap_num; ++swap_id){
-        swap_details << swap_id << " " << ((rand()%2)?"u":"e") << " " << (rand()%400000) + 800000 << " " << ((rand()%7)+2)/100.0 << " " << ((rand()%20<9)?"l":"s") << "\n";
+        swap_details << swap_id << " " << ((rand()%2)?"u":"e") << " " << (rand()%400000) + 800000 << " " << ((rand()%7)+2)/100.0 << " " << (rand()%49)+2 << " " << ((rand()%20<9)?"l":"s") << "\n";
     }
 
     fx_details.close();

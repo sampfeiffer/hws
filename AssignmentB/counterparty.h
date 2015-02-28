@@ -58,9 +58,4 @@ double Counterparty::prob_default(int t)
     return std::exp(-hazard_rate*(t-1)/360.0) - std::exp(-hazard_rate*t/360.0);
 }
 
-
-
-
-
-
 #endif // COUNTERPARTY_INCLUDED

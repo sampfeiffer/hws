@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     for (int i=1; i<=num_of_steps; ++i){
         world_state.sim_next_step();
         cp_vector[0].cva += world_state.cva_disc_factor * cp_vector[0].prob_default(world_state.time) * std::max(cp_vector[0].fx_deals[0].value(world_state.fx_rate_beg, world_state.fx_rate),0.0);
-        std::cout << "value " << cp_vector[0].cva << "\n";
+        std::cout << "value " << cp_vector[0].swap_deals[1].value(world_state) << "\n";
 
     }
     counterparty_deals_infile.close();
@@ -94,8 +94,6 @@ int main(int argc, char *argv[])
     std::cout << "\n";
 
     std::cout << "test " << cp_vector[0].prob_default(world_state.time) << "\n";
-    std::cout << "test " << world_state.time << "\n";
-
 
     return 0;
 }

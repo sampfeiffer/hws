@@ -84,7 +84,7 @@ void Parameters::print()
     for (int i=0; i<4; ++i) std::cout << "\nEuro sigma" << i << ": " << euro_sigmas[i];
     std::cout << "\nDeals handled at once: " << deals_at_once
               << "\nDays in a year: " << days_in_year
-              << "\nCVA discount rate: " << cva_disc_rate << "\n";
+              << "\nCVA discount rate: " << cva_disc_rate << "\n\n";
 }
 
 #endif // PARAMETERS_INCLUDED
