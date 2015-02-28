@@ -77,23 +77,47 @@ int main(int argc, char *argv[])
 //        cp_vector[i].print();
 //    }
 
-     // Generate a state of the world that will be changed through time
     int num_of_steps = 360*params.time_horizon/params.step_size;
+
+    // Generate a state of the world that will be changed through time
     State world_state(params);
-
-    for (int i=1; i<=num_of_steps; ++i){
+    std::vector<State> state_vector;
+    state_vector.push_back(world_state);
+    for (int i=0; i<num_of_steps; ++i){
         world_state.sim_next_step();
-        cp_vector[0].cva += world_state.cva_disc_factor * cp_vector[0].prob_default(world_state.time) * std::max(cp_vector[0].fx_deals[0].value(world_state.fx_rate_beg, world_state.fx_rate),0.0);
-        std::cout << "value " << cp_vector[0].swap_deals[1].value(world_state) << "\n";
-
+        State next_state = world_state;
+        state_vector.push_back(next_state);
     }
+
+    // Calculate CVA
+    for (unsigned int cp=0; cp<cp_vector.size(); ++cp){
+        // CVA for fx
+        for (unsigned int fx=0; fx<cp_vector[cp].fx_deals.size(); ++fx){
+            for (unsigned int i=0; i<state_vector.size(); ++i){
+                cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
+                                     * std::max(cp_vector[cp].fx_deals[fx].value(state_vector[i].fx_rate_beg, state_vector[i].fx_rate),0.0);
+            }
+        }
+        // CVA for swaps
+        for (unsigned int sw=0; sw<cp_vector[cp].swap_deals.size(); ++sw){
+            for (unsigned int i=0; i<state_vector.size(); ++i){
+                cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
+                                     * std::max(cp_vector[cp].swap_deals[sw].value(state_vector[i]),0.0);
+            }
+        }
+    }
+
+    for (unsigned int i=0; i<cp_vector.size(); ++i){
+        std::cout << "cva " << i+1 << " " << cp_vector[i].cva << "\n";
+    }
+
     counterparty_deals_infile.close();
     fx_details_infile.close();
     swap_details_infile.close();
 
     std::cout << "\n";
 
-    std::cout << "test " << cp_vector[0].prob_default(world_state.time) << "\n";
+    //std::cout << "test " << state_vector[0].fx_rate_beg << "\n";
 
     return 0;
 }
