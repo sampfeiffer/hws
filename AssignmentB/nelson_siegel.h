@@ -37,7 +37,7 @@ void NelsonSiegel::sim_next_step()
 {
     for (int i=0; i<4; ++i){
         //betas[i] = betas_beg[i] + alphas[i]*(betas_beg[i]-betas[i]) + sigmas[i]*sqrt(step_size/365)*standard_normal(generator);
-        betas[i] = betas[i] + alphas[i]*(betas_beg[i]-betas[i]) + sigmas[i]*sqrt(step_size/365)*standard_normal(generator);
+        betas[i] = betas[i] + alphas[i]*(betas_beg[i]-betas[i]) + sigmas[i]*sqrt(step_size/360)*standard_normal(generator);
     }
 }
 

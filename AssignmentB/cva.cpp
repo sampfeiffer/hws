@@ -77,14 +77,14 @@ int main(int argc, char *argv[])
 //        cp_vector[i].print();
 //    }
 
-     // Generate the path of the fx rate and Nelson-Siegel parameters
-    int num_of_steps = 365*params.time_horizon/params.step_size;
+     // Generate a state of the world that will be changed through time
+    int num_of_steps = 360*params.time_horizon/params.step_size;
     State world_state(params);
 
-    //for (int i=1; i<=num_of_steps; ++i){
-    for (int i=1; i<=30; ++i){
+    for (int i=1; i<=num_of_steps; ++i){
         world_state.sim_next_step();
-        //std::cout << "value " << cp_vector[0].fx_deals[0].value(world_state.fx_rate_beg, world_state.fx_rate) << "\n";
+        cp_vector[0].cva += world_state.cva_disc_factor * cp_vector[0].prob_default(world_state.time) * std::max(cp_vector[0].fx_deals[0].value(world_state.fx_rate_beg, world_state.fx_rate),0.0);
+        std::cout << "value " << cp_vector[0].cva << "\n";
 
     }
     counterparty_deals_infile.close();
@@ -92,6 +92,10 @@ int main(int argc, char *argv[])
     swap_details_infile.close();
 
     std::cout << "\n";
+
+    std::cout << "test " << cp_vector[0].prob_default(world_state.time) << "\n";
+    std::cout << "test " << world_state.time << "\n";
+
 
     return 0;
 }

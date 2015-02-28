@@ -1,12 +1,14 @@
 #ifndef COUNTERPARTY_INCLUDED
 #define COUNTERPARTY_INCLUDED
 
+#include <cmath>
 #include "fx.h"
 #include "swap.h"
 
 struct Counterparty{
     int cp_id;
     float hazard_rate;
+    double cva;
     std::vector<Fx> fx_deals;
     std::vector<Swap> swap_deals;
 
@@ -14,6 +16,7 @@ struct Counterparty{
     void add_fx(std::string deal_text);
     void add_swap(std::string deal_text);
     void print();
+    double prob_default(int t);
 };
 
 // Constructor
@@ -21,6 +24,7 @@ Counterparty::Counterparty(int cp_id_, float hazard_rate_)
 {
     cp_id = cp_id_;
     hazard_rate = hazard_rate_;
+    cva = 0;
 }
 
 void Counterparty::add_fx(std::string deal_text)
@@ -48,6 +52,15 @@ void Counterparty::print()
     }
     std::cout << "\n";
 }
+
+double Counterparty::prob_default(int t)
+{
+    return std::exp(-hazard_rate*(t-1)/360.0) - std::exp(-hazard_rate*t/360.0);
+}
+
+
+
+
 
 
 #endif // COUNTERPARTY_INCLUDED

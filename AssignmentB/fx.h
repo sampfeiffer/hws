@@ -12,7 +12,7 @@ struct Fx{
     Fx(std::string deal_text); //Constructor
     void print();
     void print_short();
-    float value(double fx_rate_beg, double fx_rate_cur);
+    double value(double fx_rate_beg, double fx_rate_cur);
 
 };
 
@@ -37,7 +37,7 @@ void Fx::print_short()
     std::cout << "    " << fx_id << " " << notional << " " << position << "\n";
 }
 
-float Fx::value(double fx_rate_beg, double fx_rate_cur)
+double Fx::value(double fx_rate_beg, double fx_rate_cur)
 {
     int sign=1;
     if (position == 's') sign=-1;
