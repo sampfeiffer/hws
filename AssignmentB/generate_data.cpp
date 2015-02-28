@@ -4,7 +4,7 @@
 
 void deal_distribution(Parameters &params)
 {
-    std::string sizes_filename="sizes.txt", counterparty_deals_filename="counterparty_deals.txt";
+    std::string sizes_filename="hazard_buckets.txt", counterparty_deals_filename="counterparty_deals.txt";
     std::ofstream sizes, counterparty_deals;
     const int buckets = 5;
     int bucket_size[buckets], fx_dist[buckets], swap_dist[buckets];
@@ -15,10 +15,10 @@ void deal_distribution(Parameters &params)
     int bucket_total = 0;
     std::binomial_distribution<int> distribution(params.counterparty_num,0.2);
     for (int i=0; i<buckets-1; ++i){
-        bucket_size[i] = distribution(generator);
-        bucket_total += bucket_size[i];
+        bucket_size[i] = distribution(generator)+bucket_total;
+        bucket_total = bucket_size[i];
     }
-    bucket_size[buckets-1] = params.counterparty_num - bucket_total;
+    bucket_size[buckets-1] = params.counterparty_num;
 
     sizes.open(sizes_filename);
     if (!sizes.is_open()){

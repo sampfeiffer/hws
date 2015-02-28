@@ -8,8 +8,8 @@ struct Parameters{
 
     std::ifstream parameters_infile;
     int counterparty_num, fx_num, swap_num, deals_at_once;
-    float time_horizon, step_size, recovery_rate, eur_usd_vol, ns_vol, mean_revert;
-    double beta0, beta1, beta2, tau;
+    float time_horizon, step_size, recovery_rate, eur_usd_vol, amer_alphas[4], amer_sigmas[4], euro_alphas[4], euro_sigmas[4];
+    double amer_betas[4], euro_betas[4];
 
 
     Parameters(std::string parameters_filename);
@@ -32,12 +32,12 @@ Parameters::Parameters(std::string parameters_filename)
     step_size = atof(get_param());
     recovery_rate = atof(get_param());
     eur_usd_vol = atof(get_param());
-    beta0 = atof(get_param());
-    beta1 = atof(get_param());
-    beta2 = atof(get_param());
-    tau = atof(get_param());
-    mean_revert = atof(get_param());
-    ns_vol = atof(get_param());
+    for (int i=0; i<4; ++i) amer_betas[i] = atof(get_param());
+    for (int i=0; i<4; ++i) amer_alphas[i] = atof(get_param());
+    for (int i=0; i<4; ++i) amer_sigmas[i] = atof(get_param());
+    for (int i=0; i<4; ++i) euro_betas[i] = atof(get_param());
+    for (int i=0; i<4; ++i) euro_alphas[i] = atof(get_param());
+    for (int i=0; i<4; ++i) euro_sigmas[i] = atof(get_param());
     deals_at_once = atoi(get_param());
 
     parameters_infile.close();
@@ -60,14 +60,14 @@ void Parameters::print()
               << "\nTime horizon: " << time_horizon
               << "\nTime step size: " << step_size
               << "\nRecovery rate: " << recovery_rate
-              << "\nEUR/USD volatility: " << eur_usd_vol
-              << "\nbeta0: " << beta0
-              << "\nbeta1: " << beta1
-              << "\nbeta2: " << beta2
-              << "\ntau: " << tau
-              << "\nMean reversion rate: " << mean_revert
-              << "\nNelson-Siegel volatility: " << ns_vol
-              << "\nDeals handled at once: " << deals_at_once << "\n";
+              << "\nEUR/USD volatility: " << eur_usd_vol;
+    for (int i=0; i<4; ++i) std::cout << "\nAmer beta" << i << ": " << amer_betas[i];
+    for (int i=0; i<4; ++i) std::cout << "\nAmer alpha" << i << ": " << amer_alphas[i];
+    for (int i=0; i<4; ++i) std::cout << "\nAmer sigma" << i << ": " << amer_sigmas[i];
+    for (int i=0; i<4; ++i) std::cout << "\nEuro beta" << i << ": " << euro_betas[i];
+    for (int i=0; i<4; ++i) std::cout << "\nEuro alpha" << i << ": " << euro_alphas[i];
+    for (int i=0; i<4; ++i) std::cout << "\nEuro sigma" << i << ": " << euro_sigmas[i];
+    std::cout << "\nDeals handled at once: " << deals_at_once << "\n";
 }
 
 #endif // PARAMETERS_INCLUDED

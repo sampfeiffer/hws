@@ -5,10 +5,28 @@ Horizon in years,1
 Timestep size in days,1
 Recovery rate,0.3
 EUR/USD vol,0.2
-Nelson-Siegel beta0,0.025
-Nelson-Siegel beta1,-0.028
-Nelson-Siegel beta2,-0.0008
-Nelson-Siegel tau,2.798
-Nelson-Siegel mean reversion rate,0.5
-Nelson-Siegel vol,0.01
+Euro Nelson-Siegel beta0,0.02443036
+Amer Nelson-Siegel beta1,-0.024583381
+Amer Nelson-Siegel beta2,-0.019708355
+Amer Nelson-Siegel tau,1.59281395
+Amer Nelson-Siegel alpha0,0.5
+Amer Nelson-Siegel alpha1,0.5
+Amer Nelson-Siegel alpha2,0.5
+Amer Nelson-Siegel alpha_tau,0.5
+Amer Nelson-Siegel sigma0,0.01
+Amer Nelson-Siegel sigma1,0.01
+Amer Nelson-Siegel sigma2,0.01
+Amer Nelson-Siegel sigma_tau,0.01
+Euro Nelson-Siegel beta0,0.025
+Euro Nelson-Siegel beta1,-0.028
+Euro Nelson-Siegel beta2,-0.0008
+Euro Nelson-Siegel tau,2.798
+Euro Nelson-Siegel alpha0,0.5
+Euro Nelson-Siegel alpha1,0.5
+Euro Nelson-Siegel alpha2,0.5
+Euro Nelson-Siegel alpha_tau,0.5
+Euro Nelson-Siegel sigma0,0.01
+Euro Nelson-Siegel sigma1,0.01
+Euro Nelson-Siegel sigma2,0.01
+Euro Nelson-Siegel sigma_tau,0.01
 How many deals should be handled at a time,11

@@ -10,7 +10,7 @@ struct Counterparty{
     std::vector<Fx> fx_deals;
     std::vector<Swap> swap_deals;
 
-    Counterparty(int cp_id_); //Constructor
+    Counterparty(int cp_id_, float hazard_rate_); //Constructor
     void add_fx(std::string deal_text);
     void add_swap(std::string deal_text);
     void print();
@@ -18,10 +18,10 @@ struct Counterparty{
 };
 
 // Constructor
-Counterparty::Counterparty(int cp_id_)
+Counterparty::Counterparty(int cp_id_, float hazard_rate_)
 {
     cp_id = cp_id_;
-    hazard_rate = 0.2; //change!!
+    hazard_rate = hazard_rate_; //change!!
 }
 
 void Counterparty::add_fx(std::string deal_text)
