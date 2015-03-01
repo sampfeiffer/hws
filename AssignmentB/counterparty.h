@@ -13,8 +13,8 @@ struct Counterparty{
     std::vector<Swap> swap_deals;
 
     Counterparty(int cp_id_, float hazard_rate_); //Constructor
-    void add_fx(std::string deal_text);
-    void add_swap(std::string deal_text);
+    void add_fx(int fx_id_, int notional_, char position_);
+    void add_swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_);
     void print();
     double prob_default(int t);
 };
@@ -27,14 +27,14 @@ Counterparty::Counterparty(int cp_id_, float hazard_rate_)
     cva = 0;
 }
 
-void Counterparty::add_fx(std::string deal_text)
+void Counterparty::add_fx(int fx_id_, int notional_, char position_)
 {
-    fx_deals.push_back(Fx(deal_text));
+    fx_deals.push_back(Fx(fx_id_, notional_, position_));
 }
 
-void Counterparty::add_swap(std::string deal_text)
+void Counterparty::add_swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_)
 {
-    swap_deals.push_back(Swap(deal_text));
+    swap_deals.push_back(Swap(swap_id_, denomination_, notional_, fixed_rate_, tenor_, position_));
 }
 
 void Counterparty::print()

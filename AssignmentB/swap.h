@@ -2,8 +2,6 @@
 #define SWAP_INCLUDED
 
 #include <iostream>
-#include <string>
-#include <sstream>
 #include "state.h"
 
 struct Swap{
@@ -11,22 +9,21 @@ struct Swap{
     char denomination, position;
     float fixed_rate;
 
-    Swap(std::string deal_text); //Constructor
+    Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_); //Constructor
     void print();
     void print_short();
     double value(State &world_state);
 };
 
 // Constructor
-Swap::Swap(std::string deal_text)
+Swap::Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_)
 {
-    std::stringstream deal_text_ss(deal_text);
-    deal_text_ss >> swap_id;
-    deal_text_ss >> denomination;
-    deal_text_ss >> notional;
-    deal_text_ss >> fixed_rate;
-    deal_text_ss >> tenor;
-    deal_text_ss >> position;
+    swap_id = swap_id_;
+    denomination = denomination_;
+    notional = notional_;
+    fixed_rate = fixed_rate_;
+    tenor = tenor_;
+    position = position_;
 }
 
 void Swap::print()

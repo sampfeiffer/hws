@@ -3,6 +3,9 @@
 #include "counterparty.h"
 #include "state.h"
 
+#include <stdio.h>
+#include <string.h>
+
 int main(int argc, char *argv[])
 {
     const char* parameters_filename="parameters.txt";
@@ -49,7 +52,9 @@ int main(int argc, char *argv[])
     int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
     float hazard_rate=0.10;
     std::vector<Counterparty> cp_vector;
-    std::string deal_text;
+    int fx_id, swap_id, notional, tenor;
+    char position, denomination;
+    float fixed_rate;
     counterparty_deals_infile >> deal_id;
 
     while (deals_handled <= params.deals_at_once){
@@ -61,12 +66,19 @@ int main(int argc, char *argv[])
         do{
             counterparty_deals_infile >> deal_id;
             if (deal_id<params.fx_num){
-                getline(fx_details_infile, deal_text);
-                cp.add_fx(deal_text);
+                fx_details_infile >> fx_id;
+                fx_details_infile >> notional;
+                fx_details_infile >> position;
+                cp.add_fx(fx_id, notional, position);
             }
             else {
-                getline(swap_details_infile, deal_text);
-                cp.add_swap(deal_text);
+                swap_details_infile >> swap_id;
+                swap_details_infile >> denomination;
+                swap_details_infile >> notional;
+                swap_details_infile >> fixed_rate;
+                swap_details_infile >> tenor;
+                swap_details_infile >> position;
+                cp.add_swap(swap_id, denomination, notional, fixed_rate, tenor, position);
             }
             ++deals_handled;
             counterparty_deals_infile >> current_id;
@@ -120,8 +132,6 @@ int main(int argc, char *argv[])
     swap_details_infile.close();
 
     std::cout << "\n";
-
-    //std::cout << "test " << state_vector[0].fx_rate_beg << "\n";
 
     return 0;
 }
