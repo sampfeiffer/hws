@@ -29,8 +29,8 @@ int main()
     thrust::device_vector<int> X(10);
     thrust::fill(X.begin(), X.end(), 2);
 
-    int pos = 3;
-    int value = 5;
+    float pos = 3;
+    float value = 5;
     //thrust::transform(X.begin(), X.end(), X.begin(), inv1_functor(pos));
     thrust::transform(X.begin(), X.end(), thrust::counting_iterator<int>(),  X.begin(), inv1_functor(value, pos));
 
