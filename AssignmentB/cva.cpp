@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
                                      * std::max(cp_vector[cp].swap_deals[sw].value(state_vector[i]),0.0);
             }
         }
+        cp_vector[cp].cva *= 1-params.recovery_rate;
     }
 
     for (unsigned int i=0; i<cp_vector.size(); ++i){
