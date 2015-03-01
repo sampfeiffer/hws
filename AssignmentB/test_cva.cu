@@ -1,10 +1,11 @@
-#include <thrust/sort.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
-#include <iostream>
+#include <thrust/random/linear_congruential_engine.h>
+#include <thrust/random/normal_distribution.h>
 
 #include <vector>
 #include "parameters.h"
+//#include "counterparty.h"
 
 int main(int argc, char *argv[])
 {
@@ -49,6 +50,9 @@ int main(int argc, char *argv[])
     }
 
 
+    thrust::device_vector<int> X(10);
+
+
 
     counterparty_deals_infile.close();
     fx_details_infile.close();
@@ -58,5 +62,10 @@ int main(int argc, char *argv[])
 
     //std::cout << "test " << state_vector[0].fx_rate_beg << "\n";
 
+    thrust::minstd_rand rng;
+    thrust::random::normal_distribution<float> dist(0.0f, 1.0f);
+    std::cout << dist(rng) << std::endl;
+
     return 0;
 }
+
