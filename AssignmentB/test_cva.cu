@@ -1,43 +1,62 @@
-#include <vector>
+#include <thrust/sort.h>
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 #include <iostream>
 
-#include <thrust/device_vector.h>
-#include <thrust/transform.h>
-#include <thrust/fill.h>
-#include <thrust/functional.h>
+#include <vector>
+#include "parameters.h"
 
-
-struct inv1_functor
+int main(int argc, char *argv[])
 {
-  const int pos;
+    const char* parameters_filename="parameters.txt";
+    const char* state0_filename="state0.txt";
+    const char* hazard_buckets_filename="hazard_buckets.txt";
+    const char* counterparty_deals_filename="counterparty_deals.txt";
+    const char* fx_details_filename="fx_details.txt";
+    const char* swap_details_filename="swap_details.txt";
+    std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile, hazard_buckets_infile;
 
-  inv1_functor(int _pos) : pos(_pos) {}
+    // Get parameters and initial state of the world.
+    Parameters params(parameters_filename, state0_filename);
+    params.print();
 
-  __host__ __device__
-  double operator()(const int &i) const {
-    if (i == pos)
-      return i*100;
-    else
-      return -i;
-  }
-};
+    // Get the list of hazard rate bucket endpoints
+    int hazard_buckets[5];
+    hazard_buckets_infile.open(hazard_buckets_filename);
+    if (!hazard_buckets_infile.is_open()){
+        std::cout << "ERROR: hazard_buckets.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+    for (int i=0; i<5; ++i) hazard_buckets_infile >> hazard_buckets[i];
+    hazard_buckets_infile.close();
 
-int main()
-{
-    // allocate 2 device_vectors with 10 elements
-    thrust::device_vector<int> X(10);
-    thrust::fill(X.begin(), X.end(), 2);
 
-    int pos = 3;
-    thrust::transform(X.begin(), X.end(), X.begin(), inv1_functor(pos));
+    // Open the counterparty deals and deal details
+    counterparty_deals_infile.open(counterparty_deals_filename);
+    if (!counterparty_deals_infile.is_open()){
+        std::cout << "ERROR: counterparty_deals.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+    fx_details_infile.open(fx_details_filename);
+    if (!fx_details_infile.is_open()){
+        std::cout << "ERROR: fx_details.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
+    swap_details_infile.open(swap_details_filename);
+    if (!swap_details_infile.is_open()){
+        std::cout << "ERROR: swap_details.txt file could not be opened. Exiting.\n";
+        exit(1);
+    }
 
-    // print contents of X
-    for(int i = 0; i < X.size(); i++)
-        std::cout << "X[" << i << "] = " << X[i] << "\n";
+
+
+    counterparty_deals_infile.close();
+    fx_details_infile.close();
+    swap_details_infile.close();
+
+    std::cout << "\n";
+
+    //std::cout << "test " << state_vector[0].fx_rate_beg << "\n";
 
     return 0;
 }
-
-
-
-

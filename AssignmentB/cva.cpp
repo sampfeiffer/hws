@@ -5,9 +5,12 @@
 
 int main(int argc, char *argv[])
 {
-    std::string parameters_filename="parameters.txt", state0_filename="state0.txt", hazard_buckets_filename="hazard_buckets.txt",
-                counterparty_deals_filename="counterparty_deals.txt",
-                fx_details_filename="fx_details.txt", swap_details_filename="swap_details.txt";
+    const char* parameters_filename="parameters.txt";
+    const char* state0_filename="state0.txt";
+    const char* hazard_buckets_filename="hazard_buckets.txt";
+    const char* counterparty_deals_filename="counterparty_deals.txt";
+    const char* fx_details_filename="fx_details.txt";
+    const char* swap_details_filename="swap_details.txt";
     std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile, hazard_buckets_infile;
 
     // Get parameters and initial state of the world.

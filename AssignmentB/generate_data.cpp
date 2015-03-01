@@ -4,7 +4,8 @@
 
 void deal_distribution(Parameters &params)
 {
-    std::string sizes_filename="hazard_buckets.txt", counterparty_deals_filename="counterparty_deals.txt";
+    const char* sizes_filename="hazard_buckets.txt";
+    const char* counterparty_deals_filename="counterparty_deals.txt";
     std::ofstream sizes, counterparty_deals;
     const int buckets = 5;
     int bucket_size[buckets], fx_dist[buckets], swap_dist[buckets];
@@ -128,7 +129,8 @@ void deal_distribution(Parameters &params)
 
 void assign_deal_details(Parameters &params)
 {
-    std::string fx_details_filename="fx_details.txt", swap_details_filename="swap_details.txt";
+    const char* fx_details_filename="fx_details.txt";
+    const char* swap_details_filename="swap_details.txt";
     std::ofstream fx_details, swap_details;
     fx_details.open(fx_details_filename);
     if (!fx_details.is_open()){
@@ -157,7 +159,8 @@ void assign_deal_details(Parameters &params)
 int main(int argc, char *argv[])
 {
     srand (time(NULL));
-    std::string parameters_filename = "parameters.txt", state0_filename="state0.txt";
+    const char* parameters_filename = "parameters.txt";
+    const char* state0_filename="state0.txt";
 
     Parameters params(parameters_filename, state0_filename);
     params.print();

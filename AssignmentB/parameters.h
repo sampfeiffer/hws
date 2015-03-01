@@ -13,12 +13,12 @@ struct Parameters{
     double amer_betas[4], euro_betas[4];
 
 
-    Parameters(std::string parameters_filename, std::string state0_filename);
+    Parameters(const char* parameters_filename, const char* state0_filename);
     const char* get_param(std::ifstream &infile);
     void print();
 };
 
-Parameters::Parameters(std::string parameters_filename, std::string state0_filename)
+Parameters::Parameters(const char* parameters_filename, const char* state0_filename)
 {
     state0_infile.open(state0_filename);
     if (!state0_infile.is_open()){
