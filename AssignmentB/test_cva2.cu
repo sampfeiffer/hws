@@ -17,9 +17,9 @@ struct inv1_functor
   __host__ __device__
   double operator()(const double &x, const int &i) const {
     if (i == pos)
-      return 1.0/x;
+      return x+10;
     else
-      return -x/value;
+      return -x;
   }
 };
 
@@ -29,8 +29,8 @@ int main()
     thrust::device_vector<int> X(10);
     thrust::fill(X.begin(), X.end(), 2);
 
-    float pos = 3;
-    float value = 5;
+    int pos = 3;
+    double value = 5;
     //thrust::transform(X.begin(), X.end(), X.begin(), inv1_functor(pos));
     thrust::transform(X.begin(), X.end(), thrust::counting_iterator<int>(),  X.begin(), inv1_functor(value, pos));
 
