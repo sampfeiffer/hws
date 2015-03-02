@@ -57,6 +57,8 @@ int main(int argc, char *argv[])
     float hazard_rate=0.10;
     //Counterparty cp_vector(id,hazard_rate);
     thrust::device_vector<Counterparty> cp_vector;
+    //std::vector<Counterparty> cp_vector;
+
     std::string deal_text;
     counterparty_deals_infile >> deal_id;
 

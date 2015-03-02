@@ -3,9 +3,6 @@
 #include "counterparty.h"
 #include "state.h"
 
-#include <stdio.h>
-#include <string.h>
-
 int main(int argc, char *argv[])
 {
     const char* parameters_filename="parameters.txt";
@@ -132,6 +129,7 @@ int main(int argc, char *argv[])
     swap_details_infile.close();
 
     std::cout << "\n";
+
 
     return 0;
 }

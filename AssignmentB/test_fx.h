@@ -24,14 +24,18 @@ Fx::Fx(int fx_id_, int notional_, char position_)
 
 void Fx::print()
 {
-    std::cout << "\nfx_id " << fx_id
-              << "\nnotional " << notional
-              << "\nposition " << position << "\n";
+//    std::cout << "\nfx_id " << fx_id
+//              << "\nnotional " << notional
+//              << "\nposition " << position << "\n";
+    printf("\nfx_id %i", fx_id);
+    printf("\nnotional %i", notional);
+    printf("\nposition %c \n", position);
 }
 
 void Fx::print_short()
 {
-    std::cout << "    " << fx_id << " " << notional << " " << position << "\n";
+    //std::cout << "    " << fx_id << " " << notional << " " << position << "\n";
+    printf("    %i %i %c", fx_id, notional, position);
 }
 
 double Fx::value(double fx_rate_beg, double fx_rate_cur)
