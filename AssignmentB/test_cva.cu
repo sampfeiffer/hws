@@ -53,14 +53,12 @@ int main(int argc, char *argv[])
     //thrust::device_vector<int> X(10);
 
     // Read deals into memory
-    int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
-    float hazard_rate=0.10;
+    //int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
+    //float hazard_rate=0.10;
     //Counterparty cp_vector(id,hazard_rate);
-    thrust::device_vector<Counterparty> cp_vector;
-    //std::vector<Counterparty> cp_vector;
+    //thrust::device_vector<Counterparty> cp_vector;
+    std::vector<Counterparty> cp_vector;
 
-    std::string deal_text;
-    counterparty_deals_infile >> deal_id;
 
 
 

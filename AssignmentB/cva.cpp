@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
     float hazard_rate=0.10;
     std::vector<Counterparty> cp_vector;
-    int fx_id, swap_id, notional, tenor;
+    int fx_id, swap_id, notional, tenor, start_of_data, fx_count, swap_count;
     char position, denomination;
     float fixed_rate;
     counterparty_deals_infile >> deal_id;
@@ -59,7 +59,20 @@ int main(int argc, char *argv[])
             ++bucket;
             hazard_rate -= 0.02;
         }
-        Counterparty cp(id, hazard_rate);
+        start_of_data = counterparty_deals_infile.tellg();
+        fx_count = 0;
+        swap_count = 0;
+
+        do{
+            counterparty_deals_infile >> deal_id;
+            if (deal_id<params.fx_num) ++fx_count;
+            else ++swap_count;
+            counterparty_deals_infile >> current_id;
+        } while(current_id == id);
+        counterparty_deals_infile.seekg(start_of_data,counterparty_deals_infile.beg);
+        //std::cout << id << " " << fx_count << " " << swap_count << "\n";
+
+        Counterparty cp(id, hazard_rate, fx_count, swap_count);
         do{
             counterparty_deals_infile >> deal_id;
             if (deal_id<params.fx_num){
@@ -104,17 +117,17 @@ int main(int argc, char *argv[])
     // Calculate CVA
     for (unsigned int cp=0; cp<cp_vector.size(); ++cp){
         // CVA for fx
-        for (unsigned int fx=0; fx<cp_vector[cp].fx_deals.size(); ++fx){
+        for (unsigned int fx=0; fx<cp_vector[cp].num_of_fx; ++fx){
             for (unsigned int i=0; i<state_vector.size(); ++i){
                 cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
-                                     * std::max(cp_vector[cp].fx_deals[fx].value(state_vector[i].fx_rate_beg, state_vector[i].fx_rate),0.0);
+                                     * std::max(cp_vector[cp].fx_deals[fx]->value(state_vector[i].fx_rate_beg, state_vector[i].fx_rate),0.0);
             }
         }
         // CVA for swaps
-        for (unsigned int sw=0; sw<cp_vector[cp].swap_deals.size(); ++sw){
+        for (unsigned int sw=0; sw<cp_vector[cp].num_of_swap; ++sw){
             for (unsigned int i=0; i<state_vector.size(); ++i){
                 cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
-                                     * std::max(cp_vector[cp].swap_deals[sw].value(state_vector[i]),0.0);
+                                     * std::max(cp_vector[cp].swap_deals[sw]->value(state_vector[i]),0.0);
             }
         }
         cp_vector[cp].cva *= 1-params.recovery_rate;

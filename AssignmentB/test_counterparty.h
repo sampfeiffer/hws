@@ -2,17 +2,15 @@
 #define COUNTERPARTY_INCLUDED
 
 #include <cmath>
-#include "test_fx.h"
+#include "fx.h"
 //#include "swap.h"
 
 struct Counterparty{
     int cp_id;
     float hazard_rate;
     double cva;
-    //std::vector<Fx> fx_deals;
+    std::vector<Fx> fx_deals;
     //std::vector<Swap> swap_deals;
-    thrust::device_vector<Fx> fx_deals;
-    //thrust::device_vector<Swap> swap_deals;
 
     Counterparty(int cp_id_, float hazard_rate_); //Constructor
     void add_fx(int fx_id_, int notional_, char position_);
