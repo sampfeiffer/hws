@@ -13,7 +13,7 @@ hostname
 
 # Change to working directory
 # cd $PBS_O_WORKDIR
-cd ~/BDiF2015-Sam-Pfeiffer/AssignmentB
+cd ~/BDiF2015-Sam-Pfeiffer/AssignmentB/
 
 # Run my GPU job on a single node using 1 CPU and 1 GPU.
 /scratch/shmuel.pfeiffer/BDiF2015-Sam-Pfeiffer/AssignmentB/test.out >  test.txt 2>&1
