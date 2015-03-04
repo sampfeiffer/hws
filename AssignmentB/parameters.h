@@ -4,9 +4,10 @@
 #include <iostream>
 #include <fstream>
 
+std::ifstream parameters_infile, state0_infile;
+
 struct Parameters{
 
-    std::ifstream parameters_infile, state0_infile;
     float eur_usd_rate, cva_disc_rate;
     int counterparty_num, fx_num, swap_num, deals_at_once, days_in_year, simulation_num;
     float time_horizon, step_size, recovery_rate, eur_usd_vol, amer_alphas[4], amer_sigmas[4], euro_alphas[4], euro_sigmas[4];

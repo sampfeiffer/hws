@@ -4,6 +4,7 @@
 #include <thrust/random/normal_distribution.h>
 
 #include <vector>
+#include <algorithm>
 #include "parameters.h"
 #include "counterparty.h"
 #include "state.h"
@@ -11,10 +12,10 @@
 struct calculate_cva{
     Parameters params;
 
-    calculate_cva(Parameters params_) : params(params_)
-    {;}
-
-    float operator()(const Counterparty &cp) {
+    calculate_cva(Parameters &params_) : params(params_)
+    {}
+    __host__
+    float operator()(Counterparty &cp) {
         float temp1;
         float temp2;
         float cva=0;
@@ -85,9 +86,12 @@ int main(int argc, char *argv[])
     int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
     float hazard_rate=0.10;
 
-    thrust::device_vector<Counterparty> cp_vector;
-    thrust::device_vector<float> cva_vector;
+    //thrust::device_vector<Counterparty> cp_vector;
+    //thrust::device_vector<float> cva_vector;
+    thrust::host_vector<Counterparty> cp_vector;
+    thrust::host_vector<float> cva_vector;
     //std::vector<Counterparty> cp_vector;
+    //std::vector<float> cva_vector;
 
     int fx_id, swap_id, notional, tenor, start_of_data, fx_count, swap_count;
     char position, denomination;
@@ -140,6 +144,8 @@ int main(int argc, char *argv[])
     //int num_of_steps = 360*params.time_horizon/params.step_size;
 
     thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
+    //std::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
+
 
     //for (unsigned int i=0; i<cp_vector.size(); ++i){
     //    std::cout << "cva " << i+1 << " " << cp_vector[i].cva << "\n";
