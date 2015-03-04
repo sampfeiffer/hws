@@ -5,6 +5,7 @@
 
 int main(int argc, char *argv[])
 {
+    void calculate_cva(std::vector<Counterparty>& cp_vector, Parameters &params);
     const char* parameters_filename="parameters.txt";
     const char* state0_filename="state0.txt";
     const char* hazard_buckets_filename="hazard_buckets.txt";
@@ -15,7 +16,7 @@ int main(int argc, char *argv[])
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename, state0_filename);
-    params.print();
+    //params.print();
 
     // Get the list of hazard rate bucket endpoints
     int hazard_buckets[5];
@@ -97,41 +98,54 @@ int main(int argc, char *argv[])
         ++id;
     }
 
+
+    std::cout << "fx size: " << sizeof(*(cp_vector[0].fx_deals[0])) << "\n";
+    std::cout << "swap size: " << sizeof(*(cp_vector[0].swap_deals[0])) << "\n";
+//    for (unsigned int cp=0; cp<cp_vector.size(); ++cp){
+//        std::cout << cp << " " << sizeof(cp_vector[0]) << "\n";
+//    }
+
 //    std::cout << "size " << cp_vector.size() << "\n";
 //    for (unsigned int i=0; i<cp_vector.size(); ++i){
 //        cp_vector[i].print();
 //    }
 
-    int num_of_steps = 360*params.time_horizon/params.step_size;
+//    int num_of_steps = 360*params.time_horizon/params.step_size;
+//
+//    //Generate a state of the world that will be changed through time
+//    State world_state(params);
+//    std::vector<State> state_vector;
+//    //state_vector.push_back(world_state);
+//    for (int i=0; i<num_of_steps; ++i){
+//        world_state.sim_next_step();
+//        State next_state = world_state;
+//        state_vector.push_back(next_state);
+//    }
+//    int temp_counter=0;
+//    // Calculate CVA
+//    for (unsigned int cp=0; cp<cp_vector.size(); ++cp){
+//        // CVA for fx
+//        for (unsigned int fx=0; fx<cp_vector[cp].num_of_fx; ++fx){
+//            for (unsigned int i=0; i<state_vector.size(); ++i){
+//                cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
+//                                     * std::max(cp_vector[cp].fx_deals[fx]->value(state_vector[i].fx_rate_beg, state_vector[i].fx_rate),0.0);
+//                //std::cout << cp+1 << " " << cp_vector[cp].cva << "\n";
+//            }
+//        }
+//        // CVA for swaps
+//        for (unsigned int sw=0; sw<cp_vector[cp].num_of_swap; ++sw){
+//            for (unsigned int i=0; i<state_vector.size(); ++i){
+//                cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
+//                                     * std::max(cp_vector[cp].swap_deals[sw]->value(state_vector[i]),0.0);
+//                //std::cout << cp+1 << " " << cp_vector[cp].cva << "\n";
+//            }
+//        }
+//        cp_vector[cp].cva *= 1-params.recovery_rate;
+//        ++temp_counter;
+//    }
+//    //std::cout << "numsteps " << << "\n";
 
-    // Generate a state of the world that will be changed through time
-    State world_state(params);
-    std::vector<State> state_vector;
-    state_vector.push_back(world_state);
-    for (int i=0; i<num_of_steps; ++i){
-        world_state.sim_next_step();
-        State next_state = world_state;
-        state_vector.push_back(next_state);
-    }
-
-    // Calculate CVA
-    for (unsigned int cp=0; cp<cp_vector.size(); ++cp){
-        // CVA for fx
-        for (unsigned int fx=0; fx<cp_vector[cp].num_of_fx; ++fx){
-            for (unsigned int i=0; i<state_vector.size(); ++i){
-                cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
-                                     * std::max(cp_vector[cp].fx_deals[fx]->value(state_vector[i].fx_rate_beg, state_vector[i].fx_rate),0.0);
-            }
-        }
-        // CVA for swaps
-        for (unsigned int sw=0; sw<cp_vector[cp].num_of_swap; ++sw){
-            for (unsigned int i=0; i<state_vector.size(); ++i){
-                cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
-                                     * std::max(cp_vector[cp].swap_deals[sw]->value(state_vector[i]),0.0);
-            }
-        }
-        cp_vector[cp].cva *= 1-params.recovery_rate;
-    }
+    calculate_cva(cp_vector, params);
 
     for (unsigned int i=0; i<cp_vector.size(); ++i){
         std::cout << "cva " << i+1 << " " << cp_vector[i].cva << "\n";
@@ -143,6 +157,30 @@ int main(int argc, char *argv[])
 
     std::cout << "\n";
 
-
     return 0;
+}
+
+void calculate_cva(std::vector<Counterparty>& cp_vector, Parameters &params)
+{
+    int temp_num_of_steps = 720; //change!!!
+    State world_state(params);
+    for (int i=0; i<temp_num_of_steps; ++i){
+        world_state.sim_next_step();
+        // Calculate CVA
+        for (unsigned int cp=0; cp<cp_vector.size(); ++cp){
+            // CVA for fx
+            for (unsigned int fx=0; fx<cp_vector[cp].num_of_fx; ++fx){
+                cp_vector[cp].cva += world_state.cva_disc_factor * cp_vector[cp].prob_default(world_state.time)
+                                     * std::max(cp_vector[cp].fx_deals[fx]->value(world_state.fx_rate_beg, world_state.fx_rate),0.0);
+            }
+            // CVA for swaps
+            for (unsigned int sw=0; sw<cp_vector[cp].num_of_swap; ++sw){
+                cp_vector[cp].cva += world_state.cva_disc_factor * cp_vector[cp].prob_default(world_state.time)
+                                     * std::max(cp_vector[cp].swap_deals[sw]->value(world_state),0.0);
+            }
+        }
+    }
+    for (unsigned int cp=0; cp<cp_vector.size(); ++cp){
+        cp_vector[cp].cva *= 1-params.recovery_rate;
+    }
 }

@@ -8,6 +8,37 @@
 #include "counterparty.h"
 #include "state.h"
 
+struct calculate_cva{
+    Parameters params;
+
+    calculate_cva(Parameters params_) : params(params_)
+    {;}
+
+    float operator()(const Counterparty &cp) {
+        float temp1;
+        float temp2;
+        float cva=0;
+        int num_of_steps = 360*params.time_horizon/params.step_size;
+        State world_state(params);
+        for (int i=0; i<num_of_steps; ++i){
+            world_state.sim_next_step();
+            // CVA for fx
+            for (unsigned int fx=0; fx<cp.num_of_fx; ++fx){
+                temp1 = world_state.cva_disc_factor;
+                temp2 = cp.prob_default(world_state.time);
+                cva += temp1*temp2* std::max(cp.fx_deals[fx]->value(world_state.fx_rate_beg, world_state.fx_rate),0.0);
+            }
+            // CVA for swaps
+            for (unsigned int sw=0; sw<cp.num_of_swap; ++sw){
+                cva += world_state.cva_disc_factor * cp.prob_default(world_state.time)
+                       * std::max(cp.swap_deals[sw]->value(world_state),0.0);
+            }
+        }
+        cva *= 1-params.recovery_rate;
+        return cva;
+    }
+};
+
 int main(int argc, char *argv[])
 {
     const char* parameters_filename="parameters.txt";
@@ -54,8 +85,9 @@ int main(int argc, char *argv[])
     int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
     float hazard_rate=0.10;
 
-    //thrust::device_vector<Counterparty> cp_vector;
-    std::vector<Counterparty> cp_vector;
+    thrust::device_vector<Counterparty> cp_vector;
+    thrust::device_vector<float> cva_vector;
+    //std::vector<Counterparty> cp_vector;
 
     int fx_id, swap_id, notional, tenor, start_of_data, fx_count, swap_count;
     char position, denomination;
@@ -105,44 +137,16 @@ int main(int argc, char *argv[])
         ++id;
     }
 
-//    std::cout << "size " << cp_vector.size() << "\n";
-//    for (unsigned int i=0; i<cp_vector.size(); ++i){
-//        cp_vector[i].print();
-//    }
+    //int num_of_steps = 360*params.time_horizon/params.step_size;
 
-    int num_of_steps = 360*params.time_horizon/params.step_size;
+    thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
 
-    // Generate a state of the world that will be changed through time
-    State world_state(params);
-    std::vector<State> state_vector;
-    state_vector.push_back(world_state);
-    for (int i=0; i<num_of_steps; ++i){
-        world_state.sim_next_step();
-        State next_state = world_state;
-        state_vector.push_back(next_state);
-    }
+    //for (unsigned int i=0; i<cp_vector.size(); ++i){
+    //    std::cout << "cva " << i+1 << " " << cp_vector[i].cva << "\n";
+    //}
 
-    // Calculate CVA
-    for (unsigned int cp=0; cp<cp_vector.size(); ++cp){
-        // CVA for fx
-        for (unsigned int fx=0; fx<cp_vector[cp].num_of_fx; ++fx){
-            for (unsigned int i=0; i<state_vector.size(); ++i){
-                cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
-                                     * std::max(cp_vector[cp].fx_deals[fx]->value(state_vector[i].fx_rate_beg, state_vector[i].fx_rate),0.0);
-            }
-        }
-        // CVA for swaps
-        for (unsigned int sw=0; sw<cp_vector[cp].num_of_swap; ++sw){
-            for (unsigned int i=0; i<state_vector.size(); ++i){
-                cp_vector[cp].cva += state_vector[i].cva_disc_factor * cp_vector[cp].prob_default(state_vector[i].time)
-                                     * std::max(cp_vector[cp].swap_deals[sw]->value(state_vector[i]),0.0);
-            }
-        }
-        cp_vector[cp].cva *= 1-params.recovery_rate;
-    }
-
-    for (unsigned int i=0; i<cp_vector.size(); ++i){
-        std::cout << "cva " << i+1 << " " << cp_vector[i].cva << "\n";
+    for (unsigned int i=0; i<cva_vector.size(); ++i){
+        std::cout << "cva " << i+1 << " " << cva_vector[i] << "\n";
     }
 
 
@@ -155,3 +159,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+

@@ -15,8 +15,8 @@ struct Counterparty{
     Counterparty(int cp_id_, float hazard_rate_, int fx_count, int swap_count); //Constructor
     void add_fx(int fx_id_, int notional_, char position_);
     void add_swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_);
-    void print();
-    double prob_default(int t);
+    //void print();
+    double prob_default(const int t);
 };
 
 // Constructor
@@ -43,26 +43,27 @@ void Counterparty::add_swap(int swap_id_, char denomination_, int notional_, flo
     ++num_of_swap;
 }
 
-void Counterparty::print()
+//void Counterparty::print()
+//{
+//    std::cout << "Counterparty id: " << cp_id
+//              << "\nHazard rate " << hazard_rate << "\n";
+//
+//    std::cout << "FX deals:\n";
+//    for (unsigned int i=0; i<num_of_fx; ++i){
+//        fx_deals[i]->print_short();
+//    }
+//    std::cout << "Swaps deals:\n";
+//    for (unsigned int i=0; i<num_of_swap; ++i){
+//        swap_deals[i]->print_short();
+//    }
+//    std::cout << "\n";
+//}
+
+
+double Counterparty::prob_default(const int t)
 {
-    std::cout << "Counterparty id: " << cp_id
-              << "\nHazard rate " << hazard_rate << "\n";
-
-    std::cout << "FX deals:\n";
-    for (unsigned int i=0; i<num_of_fx; ++i){
-        fx_deals[i]->print_short();
-    }
-    std::cout << "Swaps deals:\n";
-    for (unsigned int i=0; i<num_of_swap; ++i){
-        swap_deals[i]->print_short();
-    }
-    std::cout << "\n";
-}
-
-
-double Counterparty::prob_default(int t)
-{
-    return std::exp(-hazard_rate*(t-1)/360.0) - std::exp(-hazard_rate*t/360.0);
+    //return std::exp(-hazard_rate*(t-1)/360.0) - std::exp(-hazard_rate*t/360.0);
+    return 1;
 }
 
 #endif // COUNTERPARTY_INCLUDED
