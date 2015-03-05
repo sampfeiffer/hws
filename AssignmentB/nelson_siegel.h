@@ -16,7 +16,7 @@ struct NelsonSiegel{
     float alphas[4], sigmas[4];
 
     __device__ __host__ NelsonSiegel(float step_size_, float betas_beg_[], float alphas_[], float sigmas_[]);
-    __device__ __host__ double yield(float t);
+    __device__ __host__ float yield(float t);
     __device__ __host__ void sim_next_step();
 };
 
@@ -34,7 +34,7 @@ NelsonSiegel::NelsonSiegel(float step_size_, float betas_beg_[], float alphas_[]
 }
 
 __device__ __host__
-double NelsonSiegel::yield(float t)
+float NelsonSiegel::yield(float t)
 {
     if (t==0) return 0;
     return betas[0] + betas[1]*(1-exp(-t/betas[3]))/(t/betas[3]) + betas[2]*((1-exp(-t/betas[3]))/(t/betas[3])-exp(-t/betas[3]));

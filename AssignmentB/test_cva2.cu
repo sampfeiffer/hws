@@ -18,20 +18,22 @@ struct calculate_cva{
         float cva=0;
         float total_value;
         State world_state(params);
-//        for (int i=0; i<num_of_steps; ++i){
-//            total_value = 0;
-//            world_state.sim_next_step();
-//            // CVA for fx
-//            for (unsigned int fx=0; fx<cp.num_of_fx; ++fx){
-//                total_value += max(cp.fx_deals[fx]->value(world_state.fx_rate),0.0);
-//            }
-//            // CVA for swaps
+        for (int i=0; i<num_of_steps; ++i){
+            total_value = 0;
+            world_state.sim_next_step();
+            // CVA for fx
+            for (unsigned int fx=0; fx<cp.num_of_fx; ++fx){
+                //total_value += max(cp.fx_deals[fx]->value(world_state.fx_rate),float(0.0));
+            }
+            // CVA for swaps
 //            for (unsigned int sw=0; sw<cp.num_of_swap; ++sw){
 //                total_value += max(cp.swap_deals[sw]->value(world_state),0.0);
 //            }
-//            cva += world_state.cva_disc_factor * cp.prob_default(world_state.time) * total_value;
-//        }
-//        cva *= 1-params.recovery_rate;
+            //total_value = 1; //DELETE!!!!!!!
+            //cva += world_state.cva_disc_factor * cp.prob_default(world_state.time) * total_value;
+            cva += total_value; //DELETE!!!!!!!
+        }
+        cva *= 1-params.recovery_rate;
         return cva;
     }
 };

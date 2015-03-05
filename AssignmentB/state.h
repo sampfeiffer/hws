@@ -35,7 +35,7 @@ void State::sim_next_step()
     thrust::random::normal_distribution<float> standard_normal1(0.0f, 1.0f);
     amer.sim_next_step();
     euro.sim_next_step();
-    fx_rate += fx_vol*sqrt(step_size/360.0)*standard_normal1(generator1);
+    fx_rate += fx_vol*sqrt(float(step_size/360.0))*standard_normal1(generator1);
     ++time;
     cva_disc_factor = pow(1+cva_disc_rate, float(-time/360.0));
 }

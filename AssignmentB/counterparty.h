@@ -15,7 +15,7 @@ struct Counterparty{
     void add_fx(int fx_id_, int notional_, char position_);
     void add_swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_);
     //void print();
-    __device__ __host__ double prob_default(const int t);
+    __device__ __host__ float prob_default(const int t);
 };
 
 // Constructor
@@ -58,9 +58,9 @@ void Counterparty::add_swap(int swap_id_, char denomination_, int notional_, flo
 //}
 
 __device__ __host__
-double Counterparty::prob_default(const int t)
+float Counterparty::prob_default(const int t)
 {
-    return std::exp(-hazard_rate*(t-1)/360.0) - std::exp(-hazard_rate*t/360.0);
+    return std::exp(-hazard_rate*(t-1)/float(360.0)) - std::exp(-hazard_rate*t/float(360.0));
 }
 
 #endif // COUNTERPARTY_INCLUDED

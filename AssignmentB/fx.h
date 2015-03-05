@@ -11,7 +11,7 @@ struct Fx{
     __device__ __host__ Fx(int fx_id_, int notional_, char position_); //Constructor
     //void print();
     //void print_short();
-    __device__ __host__ double value(double fx_rate_cur);
+    __device__ __host__ float value(float fx_rate_cur);
 
 };
 
@@ -37,12 +37,12 @@ Fx::Fx(int fx_id_, int notional_, char position_)
 //}
 
 __device__ __host__
-double Fx::value(double fx_rate_cur)
+float Fx::value(float fx_rate_cur)
 {
     int sign=1;
     if (position == 's') sign=-1;
 
-    return sign*-1*notional*max(fx_rate_cur,0.0);
+    return sign*-1*notional*max(fx_rate_cur,float(0.0));
 }
 
 #endif // FX_INCLUDED
