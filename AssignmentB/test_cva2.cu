@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
     //thrust::device_vector<Counterparty> cp_vector;
     //thrust::device_vector<float> cva_vector;
     thrust::host_vector<Counterparty> cp_vector;
-    thrust::host_vector<float> cva_vector;
     //std::vector<Counterparty> cp_vector;
     //std::vector<float> cva_vector;
 
@@ -141,6 +140,7 @@ int main(int argc, char *argv[])
 
     //int num_of_steps = 360*params.time_horizon/params.step_size;
 
+    thrust::host_vector<float> cva_vector(cp_vector.size());
     thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
     //std::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
 
