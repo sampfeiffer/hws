@@ -12,16 +12,16 @@
 
 struct NelsonSiegel{
     float step_size;
-    double betas[4], betas_beg[4];
+    float betas[4], betas_beg[4];
     float alphas[4], sigmas[4];
 
-    __device__ __host__ NelsonSiegel(float step_size_, double betas_beg_[], float alphas_[], float sigmas_[]);
+    __device__ __host__ NelsonSiegel(float step_size_, float betas_beg_[], float alphas_[], float sigmas_[]);
     __device__ __host__ double yield(float t);
     __device__ __host__ void sim_next_step();
 };
 
 __device__ __host__
-NelsonSiegel::NelsonSiegel(float step_size_, double betas_beg_[], float alphas_[], float sigmas_[])
+NelsonSiegel::NelsonSiegel(float step_size_, float betas_beg_[], float alphas_[], float sigmas_[])
 {
     step_size = step_size_;
     int i;

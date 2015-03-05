@@ -9,7 +9,7 @@ struct Parameters{
     float eur_usd_rate, cva_disc_rate;
     int counterparty_num, fx_num, swap_num, deals_at_once, days_in_year, simulation_num;
     float time_horizon, step_size, recovery_rate, eur_usd_vol, amer_alphas[4], amer_sigmas[4], euro_alphas[4], euro_sigmas[4];
-    double amer_betas[4], euro_betas[4];
+    float amer_betas[4], euro_betas[4];
 
 
     Parameters(const char* parameters_filename, const char* state0_filename);

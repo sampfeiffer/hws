@@ -6,7 +6,7 @@
 
 struct State{
     float step_size, cva_disc_rate;
-    double fx_rate_beg, fx_rate, fx_vol, cva_disc_factor;
+    float fx_rate_beg, fx_rate, fx_vol, cva_disc_factor;
     int time;
     NelsonSiegel amer, euro;
 
@@ -25,7 +25,7 @@ State::State(Parameters &params):
     fx_rate = fx_rate_beg;
     time = 0;
     cva_disc_rate = params.cva_disc_rate;
-    cva_disc_factor = pow(double(1+cva_disc_rate), -time/360.0);
+    cva_disc_factor = pow(1+cva_disc_rate, float(-time/360.0));
 }
 
 __device__ __host__
@@ -37,7 +37,7 @@ void State::sim_next_step()
     euro.sim_next_step();
     fx_rate += fx_vol*sqrt(step_size/360.0)*standard_normal1(generator1);
     ++time;
-    cva_disc_factor = pow(double(1+cva_disc_rate), -time/360.0);
+    cva_disc_factor = pow(1+cva_disc_rate, float(-time/360.0));
 }
 
 

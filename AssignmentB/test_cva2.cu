@@ -16,8 +16,8 @@ struct calculate_cva{
     __device__ __host__
     float operator()(Counterparty &cp) {
         float cva=0;
-//        float total_value;
-//        State world_state(params);
+        float total_value;
+        State world_state(params);
 //        for (int i=0; i<num_of_steps; ++i){
 //            total_value = 0;
 //            world_state.sim_next_step();
