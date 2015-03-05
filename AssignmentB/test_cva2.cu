@@ -9,21 +9,22 @@
 
 struct calculate_cva{
     Parameters params;
+    int num_of_steps;
 
-    calculate_cva(Parameters &params_) : params(params_)
+    calculate_cva(Parameters &params_, int &num_of_steps_) : params(params_), num_of_steps(num_of_steps_)
     {}
     __host__
     float operator()(Counterparty &cp) {
         float total_value;
         float cva=0;
-        int num_of_steps = 360*params.time_horizon/params.step_size;
+        //int num_of_steps = 360*params.time_horizon/params.step_size;
         State world_state(params);
         for (int i=0; i<num_of_steps; ++i){
             total_value = 0;
             world_state.sim_next_step();
             // CVA for fx
             for (unsigned int fx=0; fx<cp.num_of_fx; ++fx){
-                total_value += std::max(cp.fx_deals[fx]->value(world_state.fx_rate_beg, world_state.fx_rate),0.0);
+                total_value += std::max(cp.fx_deals[fx]->value(world_state.fx_rate),0.0);
             }
             // CVA for swaps
             for (unsigned int sw=0; sw<cp.num_of_swap; ++sw){
@@ -107,7 +108,6 @@ int main(int argc, char *argv[])
             counterparty_deals_infile >> current_id;
         } while(current_id == id);
         counterparty_deals_infile.seekg(start_of_data,counterparty_deals_infile.beg);
-        //std::cout << id << " " << fx_count << " " << swap_count << "\n";
 
         Counterparty cp(id, hazard_rate, fx_count, swap_count);
         do{
@@ -134,22 +134,16 @@ int main(int argc, char *argv[])
         ++id;
     }
 
-    //int num_of_steps = 360*params.time_horizon/params.step_size;
+    int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
     //std::vector<float> cva_vector;
     thrust::host_vector<float> cva_vector(cp_vector.size());
-    thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
+    thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params, num_of_steps));
     //std::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
-
-
-    //for (unsigned int i=0; i<cp_vector.size(); ++i){
-    //    std::cout << "cva " << i+1 << " " << cp_vector[i].cva << "\n";
-    //}
 
     for (unsigned int i=0; i<cva_vector.size(); ++i){
         std::cout << "cva " << i+1 << " " << cva_vector[i] << "\n";
     }
-
 
     counterparty_deals_infile.close();
     fx_details_infile.close();

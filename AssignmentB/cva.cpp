@@ -138,11 +138,6 @@ int main(int argc, char *argv[])
     //thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
     std::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
 
-
-    //for (unsigned int i=0; i<cp_vector.size(); ++i){
-    //    std::cout << "cva " << i+1 << " " << cp_vector[i].cva << "\n";
-    //}
-
     for (unsigned int i=0; i<cva_vector.size(); ++i){
         std::cout << "cva " << i+1 << " " << cva_vector[i] << "\n";
     }

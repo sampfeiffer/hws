@@ -10,7 +10,7 @@ struct Fx{
     Fx(int fx_id_, int notional_, char position_); //Constructor
     //void print();
     //void print_short();
-    double value(double fx_rate_beg, double fx_rate_cur);
+    double value(double fx_rate_cur);
 
 };
 
@@ -34,7 +34,7 @@ Fx::Fx(int fx_id_, int notional_, char position_)
 //    std::cout << "    " << fx_id << " " << notional << " " << position << "\n";
 //}
 
-double Fx::value(double fx_rate_beg, double fx_rate_cur)
+double Fx::value(double fx_rate_cur)
 {
     int sign=1;
     if (position == 's') sign=-1;

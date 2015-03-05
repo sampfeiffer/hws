@@ -30,7 +30,6 @@ void State::sim_next_step()
 {
     amer.sim_next_step();
     euro.sim_next_step();
-    //std::normal_distribution<double> normal_fx(0.0,1.0);
     fx_rate += fx_vol*sqrt(step_size/360.0)*standard_normal(generator);
     ++time;
     cva_disc_factor = pow(1+cva_disc_rate, -time/360.0);
