@@ -11,7 +11,7 @@ struct calculate_cva{
     Parameters params;
     int num_of_steps;
 
-    calculate_cva(Parameters &params_, int &num_of_steps_) : params(params_), num_of_steps(num_of_steps_)
+    calculate_cva(Parameters params_, int num_of_steps_) : params(params_), num_of_steps(num_of_steps_)
     {}
     __device__ __host__
     float operator()(Counterparty &cp) {
@@ -83,8 +83,8 @@ int main(int argc, char *argv[])
     int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
     float hazard_rate=0.10;
 
-    //thrust::device_vector<Counterparty> cp_vector;
-    thrust::host_vector<Counterparty> cp_vector;
+    thrust::device_vector<Counterparty> cp_vector;
+    //thrust::host_vector<Counterparty> cp_vector;
     //std::vector<Counterparty> cp_vector;
 
     int fx_id, swap_id, notional, tenor, start_of_data, fx_count, swap_count;
@@ -137,7 +137,8 @@ int main(int argc, char *argv[])
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
     //std::vector<float> cva_vector;
-    thrust::host_vector<float> cva_vector(cp_vector.size());
+    //thrust::host_vector<float> cva_vector(cp_vector.size());
+    thrust::device_vector<float> cva_vector(cp_vector.size());
     thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params, num_of_steps));
     //std::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
 
