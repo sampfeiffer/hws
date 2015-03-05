@@ -1,7 +1,5 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
-#include <thrust/random/linear_congruential_engine.h>
-#include <thrust/random/normal_distribution.h>
 
 #include <vector>
 #include <algorithm>
@@ -50,7 +48,7 @@ int main(int argc, char *argv[])
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename, state0_filename);
-    params.print();
+    //params.print();
 
     // Get the list of hazard rate bucket endpoints
     int hazard_buckets[5];
@@ -85,10 +83,8 @@ int main(int argc, char *argv[])
     float hazard_rate=0.10;
 
     //thrust::device_vector<Counterparty> cp_vector;
-    //thrust::device_vector<float> cva_vector;
     thrust::host_vector<Counterparty> cp_vector;
     //std::vector<Counterparty> cp_vector;
-    //std::vector<float> cva_vector;
 
     int fx_id, swap_id, notional, tenor, start_of_data, fx_count, swap_count;
     char position, denomination;
@@ -140,6 +136,7 @@ int main(int argc, char *argv[])
 
     //int num_of_steps = 360*params.time_horizon/params.step_size;
 
+    //std::vector<float> cva_vector;
     thrust::host_vector<float> cva_vector(cp_vector.size());
     thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
     //std::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));

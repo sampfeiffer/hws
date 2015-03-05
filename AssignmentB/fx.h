@@ -39,7 +39,7 @@ double Fx::value(double fx_rate_beg, double fx_rate_cur)
     int sign=1;
     if (position == 's') sign=-1;
 
-    return sign*notional*(std::max(fx_rate_cur,0.0)/fx_rate_beg - 1);
+    return sign*-1*notional*std::max(fx_rate_cur,0.0);
 }
 
 #endif // FX_INCLUDED

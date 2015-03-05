@@ -4,8 +4,6 @@
 #include <iostream>
 #include <fstream>
 
-std::ifstream parameters_infile, state0_infile;
-
 struct Parameters{
 
     float eur_usd_rate, cva_disc_rate;
@@ -21,6 +19,7 @@ struct Parameters{
 
 Parameters::Parameters(const char* parameters_filename, const char* state0_filename)
 {
+    std::ifstream parameters_infile, state0_infile;
     state0_infile.open(state0_filename);
     if (!state0_infile.is_open()){
         std::cout << "ERROR: state0.txt file could not be opened. Exiting.\n";

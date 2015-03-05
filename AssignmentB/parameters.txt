@@ -1,9 +1,9 @@
 Number of counterparties,200
 Number of fx deals,2000
 Number of swap deals,2000
-Horizon in years,1
+Horizon in years,2
 Timestep size in days,1
-Recovery rate,0.3
+Recovery rate,0.4
 EUR/USD vol,0.2
 Euro Nelson-Siegel beta0,0.02443036
 Amer Nelson-Siegel beta1,-0.024583381
@@ -17,10 +17,10 @@ Amer Nelson-Siegel sigma0,0.01
 Amer Nelson-Siegel sigma1,0.01
 Amer Nelson-Siegel sigma2,0.01
 Amer Nelson-Siegel sigma_tau,0.01
-Euro Nelson-Siegel beta0,0.025
-Euro Nelson-Siegel beta1,-0.028
-Euro Nelson-Siegel beta2,-0.0008
-Euro Nelson-Siegel tau,2.798
+Euro Nelson-Siegel beta0,0.017126647
+Euro Nelson-Siegel beta1,-0.016966615
+Euro Nelson-Siegel beta2,-0.019999481
+Euro Nelson-Siegel tau,4.62349893
 Euro Nelson-Siegel alpha0,0.5
 Euro Nelson-Siegel alpha1,0.5
 Euro Nelson-Siegel alpha2,0.5
