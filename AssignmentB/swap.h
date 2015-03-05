@@ -9,13 +9,14 @@ struct Swap{
     char denomination, position;
     float fixed_rate;
 
-    Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_); //Constructor
+    __device__ __host__ Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_); //Constructor
     //void print();
     //void print_short();
-    double value(State &world_state);
+    __device__ __host__ double value(State &world_state);
 };
 
 // Constructor
+__device__ __host__
 Swap::Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_)
 {
     swap_id = swap_id_;
@@ -41,6 +42,7 @@ Swap::Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, i
 //    std::cout << "    " << swap_id << " " << denomination << " " << notional << " " << fixed_rate << " "  << tenor << " " << position << "\n";
 //}
 
+__device__ __host__
 double Swap::value(State &world_state)
 {
     double fixed_leg, float_leg, coupon_date=tenor-world_state.time/360.0, next_reset = (30-(world_state.time%30))/360.0;

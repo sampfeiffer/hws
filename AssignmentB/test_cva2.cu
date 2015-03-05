@@ -13,7 +13,7 @@ struct calculate_cva{
 
     calculate_cva(Parameters &params_, int &num_of_steps_) : params(params_), num_of_steps(num_of_steps_)
     {}
-    __host__
+    __device__ __host__
     float operator()(Counterparty &cp) {
         float total_value;
         float cva=0;
@@ -24,11 +24,11 @@ struct calculate_cva{
             world_state.sim_next_step();
             // CVA for fx
             for (unsigned int fx=0; fx<cp.num_of_fx; ++fx){
-                total_value += std::max(cp.fx_deals[fx]->value(world_state.fx_rate),0.0);
+                total_value += max(cp.fx_deals[fx]->value(world_state.fx_rate),0.0);
             }
             // CVA for swaps
             for (unsigned int sw=0; sw<cp.num_of_swap; ++sw){
-                total_value += std::max(cp.swap_deals[sw]->value(world_state),0.0);
+                total_value += max(cp.swap_deals[sw]->value(world_state),0.0);
             }
             cva += world_state.cva_disc_factor * cp.prob_default(world_state.time) * total_value;
         }

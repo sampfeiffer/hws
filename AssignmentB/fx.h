@@ -2,19 +2,21 @@
 #define FX_INCLUDED
 
 #include <iostream>
+#include <cmath>
 
 struct Fx{
     int fx_id, notional;
     char position;
 
-    Fx(int fx_id_, int notional_, char position_); //Constructor
+    __device__ __host__ Fx(int fx_id_, int notional_, char position_); //Constructor
     //void print();
     //void print_short();
-    double value(double fx_rate_cur);
+    __device__ __host__ double value(double fx_rate_cur);
 
 };
 
 // Constructor
+__device__ __host__
 Fx::Fx(int fx_id_, int notional_, char position_)
 {
     fx_id = fx_id_;
@@ -34,12 +36,13 @@ Fx::Fx(int fx_id_, int notional_, char position_)
 //    std::cout << "    " << fx_id << " " << notional << " " << position << "\n";
 //}
 
+__device__ __host__
 double Fx::value(double fx_rate_cur)
 {
     int sign=1;
     if (position == 's') sign=-1;
 
-    return sign*-1*notional*std::max(fx_rate_cur,0.0);
+    return sign*-1*notional*max(fx_rate_cur,0.0);
 }
 
 #endif // FX_INCLUDED
