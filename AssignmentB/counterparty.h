@@ -8,7 +8,6 @@
 struct Counterparty{
     int cp_id, num_of_fx, num_of_swap;
     float hazard_rate;
-    double cva;
     Fx** fx_deals;
     Swap** swap_deals;
 
@@ -24,7 +23,6 @@ Counterparty::Counterparty(int cp_id_, float hazard_rate_, int fx_count, int swa
 {
     cp_id = cp_id_;
     hazard_rate = hazard_rate_;
-    cva = 0;
     fx_deals = new Fx*[fx_count];
     swap_deals = new Swap*[swap_count];
     num_of_fx = 0;
