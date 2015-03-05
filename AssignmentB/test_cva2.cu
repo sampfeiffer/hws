@@ -42,10 +42,10 @@ int main(int argc, char *argv[])
 {
     const char* parameters_filename="parameters.txt";
     const char* state0_filename="state0.txt";
-    const char* hazard_buckets_filename="hazard_buckets.txt";
-    const char* counterparty_deals_filename="counterparty_deals.txt";
-    const char* fx_details_filename="fx_details.txt";
-    const char* swap_details_filename="swap_details.txt";
+    const char* hazard_buckets_filename="hazard_buckets.dat";
+    const char* counterparty_deals_filename="counterparty_deals.dat";
+    const char* fx_details_filename="fx_details.dat";
+    const char* swap_details_filename="swap_details.dat";
     std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile, hazard_buckets_infile;
 
     // Get parameters and initial state of the world.
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     int hazard_buckets[5];
     hazard_buckets_infile.open(hazard_buckets_filename);
     if (!hazard_buckets_infile.is_open()){
-        std::cout << "ERROR: hazard_buckets.txt file could not be opened. Exiting.\n";
+        std::cout << "ERROR: hazard_buckets.dat file could not be opened. Exiting.\n";
         exit(1);
     }
     for (int i=0; i<5; ++i) hazard_buckets_infile >> hazard_buckets[i];
@@ -66,17 +66,17 @@ int main(int argc, char *argv[])
     // Open the counterparty deals and deal details
     counterparty_deals_infile.open(counterparty_deals_filename);
     if (!counterparty_deals_infile.is_open()){
-        std::cout << "ERROR: counterparty_deals.txt file could not be opened. Exiting.\n";
+        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
         exit(1);
     }
     fx_details_infile.open(fx_details_filename);
     if (!fx_details_infile.is_open()){
-        std::cout << "ERROR: fx_details.txt file could not be opened. Exiting.\n";
+        std::cout << "ERROR: fx_details.dat file could not be opened. Exiting.\n";
         exit(1);
     }
     swap_details_infile.open(swap_details_filename);
     if (!swap_details_infile.is_open()){
-        std::cout << "ERROR: swap_details.txt file could not be opened. Exiting.\n";
+        std::cout << "ERROR: swap_details.dat file could not be opened. Exiting.\n";
         exit(1);
     }
 
