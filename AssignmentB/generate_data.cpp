@@ -4,9 +4,9 @@
 
 void deal_distribution(Parameters &params)
 {
-    const char* sizes_filename="hazard_buckets.txt";
-    const char* counterparty_deals_filename="counterparty_deals.txt";
-    std::ofstream sizes, counterparty_deals;
+    const char* hazard_buckets_filename="hazard_buckets.dat";
+    const char* counterparty_deals_filename="counterparty_deals.dat";
+    std::ofstream hazard_buckets, counterparty_deals;
     const int buckets = 5;
     int bucket_size[buckets], fx_dist[buckets], swap_dist[buckets];
     std::default_random_engine generator;
@@ -21,15 +21,15 @@ void deal_distribution(Parameters &params)
     }
     bucket_size[buckets-1] = params.counterparty_num;
 
-    sizes.open(sizes_filename);
-    if (!sizes.is_open()){
-        std::cout << "ERROR: " << sizes_filename << " sizes.txt file could not be opened. Exiting.\n";
+    hazard_buckets.open(hazard_buckets_filename);
+    if (!hazard_buckets.is_open()){
+        std::cout << "ERROR: " << hazard_buckets_filename << " hazard_buckets.dat file could not be opened. Exiting.\n";
         exit(1);
     }
     for (int i=0; i<buckets; ++i){
-        sizes << bucket_size[i] << " ";
+        hazard_buckets << bucket_size[i] << " ";
     }
-    sizes.close();
+    hazard_buckets.close();
 
     //Put aside a mix of counterparty_num (1,000,000) fx and swaps to
     //make sure that each counterparty has a least one deal.
@@ -61,7 +61,7 @@ void deal_distribution(Parameters &params)
 
     counterparty_deals.open(counterparty_deals_filename);
     if (!counterparty_deals.is_open()){
-        std::cout << "ERROR: " << counterparty_deals_filename << " counterparty_deals.txt file could not be opened. Exiting.\n";
+        std::cout << "ERROR: " << counterparty_deals_filename << " counterparty_deals.dat file could not be opened. Exiting.\n";
         exit(1);
     }
 
@@ -129,18 +129,18 @@ void deal_distribution(Parameters &params)
 
 void assign_deal_details(Parameters &params)
 {
-    const char* fx_details_filename="fx_details.txt";
-    const char* swap_details_filename="swap_details.txt";
+    const char* fx_details_filename="fx_details.dat";
+    const char* swap_details_filename="swap_details.dat";
     std::ofstream fx_details, swap_details;
     fx_details.open(fx_details_filename);
     if (!fx_details.is_open()){
-        std::cout << "ERROR: fx_details.txt file could not be opened. Exiting.\n";
+        std::cout << "ERROR: fx_details.dat file could not be opened. Exiting.\n";
         exit(1);
     }
 
     swap_details.open(swap_details_filename);
     if (!swap_details.is_open()){
-        std::cout << "ERROR: swap_details.txt file could not be opened. Exiting.\n";
+        std::cout << "ERROR: swap_details.dat file could not be opened. Exiting.\n";
         exit(1);
     }
 

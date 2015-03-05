@@ -1,7 +1,7 @@
 Number of counterparties,200
 Number of fx deals,2000
 Number of swap deals,2000
-Horizon in years,2
+Horizon in years,1
 Timestep size in days,1
 Recovery rate,0.3
 EUR/USD vol,0.2

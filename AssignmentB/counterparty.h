@@ -62,8 +62,8 @@ void Counterparty::add_swap(int swap_id_, char denomination_, int notional_, flo
 
 double Counterparty::prob_default(const int t)
 {
-    //return std::exp(-hazard_rate*(t-1)/360.0) - std::exp(-hazard_rate*t/360.0);
-    return 1;
+    return std::exp(-hazard_rate*(t-1)/360.0) - std::exp(-hazard_rate*t/360.0);
+    //return 1;
 }
 
 #endif // COUNTERPARTY_INCLUDED
