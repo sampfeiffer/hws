@@ -1,1 +1,1 @@
-EUR/USD rate,1.5
+EUR/USD rate,1.10
