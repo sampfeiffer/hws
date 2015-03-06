@@ -45,20 +45,20 @@ Swap::Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, i
 __device__ __host__
 float Swap::value(State &world_state)
 {
-    double fixed_leg, float_leg, coupon_date=tenor-world_state.time/360.0, next_reset = (30-(world_state.time%30))/360.0;
+    float fixed_leg, float_leg, coupon_date=tenor-world_state.time/float(360.0), next_reset = (30-(world_state.time%30))/float(360.0);
 
     if (coupon_date < 0) return 0;
 
     if (denomination == 'a'){
         //Fixed leg
-        fixed_leg = 1.0/(1+world_state.amer.yield(coupon_date)*coupon_date); //bullet
+        fixed_leg = float(1.0)/(1+world_state.amer.yield(coupon_date)*coupon_date); //bullet
         while (coupon_date > 0){
-            fixed_leg += 1.0/(1+world_state.amer.yield(coupon_date)*coupon_date) * fixed_rate/12.0; //coupons
-            coupon_date -= 1.0/12;
+            fixed_leg += float(1.0)/(1+world_state.amer.yield(coupon_date)*coupon_date) * fixed_rate/float(12.0); //coupons
+            coupon_date -= float(1.0)/12;
         }
 
         //Floating leg
-        float_leg = 1.0/(1+world_state.amer.yield(next_reset)*next_reset);
+        float_leg = float(1.0)/(1+world_state.amer.yield(next_reset)*next_reset);
 
         int sign=1;
         if (position == 's') sign=-1;
@@ -67,14 +67,14 @@ float Swap::value(State &world_state)
     }
     else{
         //Fixed leg
-        fixed_leg = 1.0/(1+world_state.euro.yield(coupon_date)*coupon_date); //bullet
+        fixed_leg = float(1.0)/(1+world_state.euro.yield(coupon_date)*coupon_date); //bullet
         while (coupon_date > 0){
-            fixed_leg += 1.0/(1+world_state.euro.yield(coupon_date)*coupon_date) * fixed_rate/12.0; //coupons
-            coupon_date -= 1.0/12;
+            fixed_leg += float(1.0)/(1+world_state.euro.yield(coupon_date)*coupon_date) * fixed_rate/float(12.0); //coupons
+            coupon_date -= float(1.0)/12;
         }
 
         //Floating leg
-        float_leg = 1.0/(1+world_state.euro.yield(next_reset)*next_reset);
+        float_leg = float(1.0)/(1+world_state.euro.yield(next_reset)*next_reset);
 
         int sign=1;
         if (position == 's') sign=-1;

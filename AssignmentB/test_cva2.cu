@@ -23,15 +23,13 @@ struct calculate_cva{
             world_state.sim_next_step();
             // CVA for fx
             for (unsigned int fx=0; fx<cp.num_of_fx; ++fx){
-                //total_value += max(cp.fx_deals[fx]->value(world_state.fx_rate),float(0.0));
+                total_value += max(cp.fx_deals[fx]->value(world_state.fx_rate),float(0.0));
             }
             // CVA for swaps
-//            for (unsigned int sw=0; sw<cp.num_of_swap; ++sw){
-//                total_value += max(cp.swap_deals[sw]->value(world_state),0.0);
-//            }
-            //total_value = 1; //DELETE!!!!!!!
-            //cva += world_state.cva_disc_factor * cp.prob_default(world_state.time) * total_value;
-            cva += total_value; //DELETE!!!!!!!
+            for (unsigned int sw=0; sw<cp.num_of_swap; ++sw){
+                total_value += max(cp.swap_deals[sw]->value(world_state),float(0.0));
+            }
+            cva += world_state.cva_disc_factor * cp.prob_default(world_state.time) * total_value;
         }
         cva *= 1-params.recovery_rate;
         return cva;
