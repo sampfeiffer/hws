@@ -38,7 +38,7 @@ struct calculate_cva{
 
 int main(int argc, char *argv[])
 {
-    clock_t program_start_time, t;
+    clock_t program_start_time, end_time;
     program_start_time = clock();
 
     const char* parameters_filename="parameters.txt";
@@ -138,12 +138,12 @@ int main(int argc, char *argv[])
 
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
-    t = clock() - program_start_time;
-    std::cout << "It took me " << t << " clicks (" << ((float)t)/CLOCKS_PER_SEC << " seconds).\n";
+    end_time = clock() - program_start_time;
+    std::cout << "Timing: whole program " << float(end_time)/CLOCKS_PER_SEC << " seconds.\n";
 
     //thrust::host_vector<float> cva_vector(cp_vector.size());
     thrust::device_vector<float> cva_vector(cp_vector.size());
-    std::cout << "here1\n";
+    std::cout << "here1 " << cva_vector.size() << "\n";
     thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params, num_of_steps));
     std::cout << "here2\n";
     std::cout << "size1 " << cva_vector.size() << "\n";
