@@ -6,6 +6,7 @@
 #include "parameters.h"
 #include "counterparty.h"
 #include "state.h"
+#include "data_reader.h"
 
 struct calculate_cva{
     Parameters params;
@@ -43,98 +44,18 @@ int main(int argc, char *argv[])
 
     const char* parameters_filename="parameters.txt";
     const char* state0_filename="state0.txt";
-    const char* hazard_buckets_filename="hazard_buckets.dat";
-    const char* counterparty_deals_filename="counterparty_deals.dat";
-    const char* fx_details_filename="fx_details.dat";
-    const char* swap_details_filename="swap_details.dat";
-    std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile, hazard_buckets_infile;
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename, state0_filename);
     //params.print();
 
-    // Get the list of hazard rate bucket endpoints
-    int hazard_buckets[5];
-    hazard_buckets_infile.open(hazard_buckets_filename);
-    if (!hazard_buckets_infile.is_open()){
-        std::cout << "ERROR: hazard_buckets.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
-    for (int i=0; i<5; ++i) hazard_buckets_infile >> hazard_buckets[i];
-    hazard_buckets_infile.close();
+    std::vector<Counterparty> cp_vector_temp;
 
+    Data_reader data;
+    data.get_next_data(cp_vector_temp, params);
 
-    // Open the counterparty deals and deal details
-    counterparty_deals_infile.open(counterparty_deals_filename);
-    if (!counterparty_deals_infile.is_open()){
-        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
-    fx_details_infile.open(fx_details_filename);
-    if (!fx_details_infile.is_open()){
-        std::cout << "ERROR: fx_details.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
-    swap_details_infile.open(swap_details_filename);
-    if (!swap_details_infile.is_open()){
-        std::cout << "ERROR: swap_details.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
-
-    thrust::device_vector<Counterparty> cp_vector;
-    //thrust::host_vector<Counterparty> cp_vector;
-    //std::vector<Counterparty> cp_vector;
-
-    // Read deals into memory
-    int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
-    float hazard_rate=0.10;
-
-    int fx_id, swap_id, notional, tenor, start_of_data, fx_count, swap_count;
-    char position, denomination;
-    float fixed_rate;
-    counterparty_deals_infile >> deal_id;
-
-    while (deals_handled <= params.deals_at_once){
-        if (id > hazard_buckets[bucket]){
-            ++bucket;
-            hazard_rate -= 0.02;
-        }
-        start_of_data = counterparty_deals_infile.tellg();
-        fx_count = 0;
-        swap_count = 0;
-
-        do{
-            counterparty_deals_infile >> deal_id;
-            if (deal_id<params.fx_num) ++fx_count;
-            else ++swap_count;
-            counterparty_deals_infile >> current_id;
-        } while(current_id == id);
-        counterparty_deals_infile.seekg(start_of_data,counterparty_deals_infile.beg);
-
-        Counterparty cp(id, hazard_rate, fx_count, swap_count);
-        do{
-            counterparty_deals_infile >> deal_id;
-            if (deal_id<params.fx_num){
-                fx_details_infile >> fx_id;
-                fx_details_infile >> notional;
-                fx_details_infile >> position;
-                cp.add_fx(fx_id, notional, position);
-            }
-            else {
-                swap_details_infile >> swap_id;
-                swap_details_infile >> denomination;
-                swap_details_infile >> notional;
-                swap_details_infile >> fixed_rate;
-                swap_details_infile >> tenor;
-                swap_details_infile >> position;
-                cp.add_swap(swap_id, denomination, notional, fixed_rate, tenor, position);
-            }
-            ++deals_handled;
-            counterparty_deals_infile >> current_id;
-        } while(current_id == id);
-        cp_vector.push_back(cp);
-        ++id;
-    }
+    thrust::device_vector<Counterparty> cp_vector(cp_vector_temp.size());
+    thrust::copy(cp_vector_temp.begin(), cp_vector_temp.end(), cp_vector.begin());
 
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
@@ -155,9 +76,7 @@ int main(int argc, char *argv[])
         std::cout << "cva " << i+1 << " " << cva_vector_host[i] << "\n";
     }
 
-    counterparty_deals_infile.close();
-    fx_details_infile.close();
-    swap_details_infile.close();
+    data.close_files();
 
     std::cout << "\n";
 

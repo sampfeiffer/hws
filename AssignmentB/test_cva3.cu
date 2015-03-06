@@ -20,8 +20,6 @@
 #include "counterparty.h"
 #include "state.h"
 
-//#define DSIZE 1000
-
 using namespace std;
 
 struct calculate_cva{
