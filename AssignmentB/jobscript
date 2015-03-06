@@ -15,4 +15,4 @@ hostname
 cd $PBS_O_WORKDIR
 
 # Run my GPU job on a single node using 1 CPU and 1 GPU.
-/scratch/shmuel.pfeiffer/BDiF2015-Sam-Pfeiffer/AssignmentB/test.out >  test.txt 2>&1
+/scratch/shmuel.pfeiffer/BDiF2015-Sam-Pfeiffer/AssignmentB/cva.out >  test.txt 2>&1
