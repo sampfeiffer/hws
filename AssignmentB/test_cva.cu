@@ -15,7 +15,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define DSIZE 200000000
+#define DSIZE 1000
 
 using namespace std;
 
