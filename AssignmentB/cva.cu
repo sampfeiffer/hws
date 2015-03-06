@@ -81,13 +81,13 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // Read deals into memory
-    int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
-    float hazard_rate=0.10;
-
     thrust::device_vector<Counterparty> cp_vector;
     //thrust::host_vector<Counterparty> cp_vector;
     //std::vector<Counterparty> cp_vector;
+
+    // Read deals into memory
+    int current_id=1, deal_id, id=1, deals_handled=0, bucket=0;
+    float hazard_rate=0.10;
 
     int fx_id, swap_id, notional, tenor, start_of_data, fx_count, swap_count;
     char position, denomination;

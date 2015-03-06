@@ -11,6 +11,7 @@ struct Counterparty{
     Fx** fx_deals;
     Swap** swap_deals;
 
+    Counterparty(){};
     Counterparty(int cp_id_, float hazard_rate_, int fx_count, int swap_count); //Constructor
     void add_fx(int fx_id_, int notional_, char position_);
     void add_swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_);

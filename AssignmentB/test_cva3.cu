@@ -20,9 +20,38 @@
 #include "counterparty.h"
 #include "state.h"
 
-#define DSIZE 1000
+//#define DSIZE 1000
 
 using namespace std;
+
+struct calculate_cva{
+    Parameters params;
+    int num_of_steps;
+
+    calculate_cva(Parameters params_, int num_of_steps_) : params(params_), num_of_steps(num_of_steps_)
+    {}
+    __device__ __host__
+    float operator()(Counterparty &cp) {
+        float cva=0;
+        float total_value;
+        State world_state(params);
+        for (int i=0; i<num_of_steps; ++i){
+            total_value = 0;
+            world_state.sim_next_step();
+            // CVA for fx
+            for (unsigned int fx=0; fx<cp.num_of_fx; ++fx){
+                total_value += max(cp.fx_deals[fx]->value(world_state.fx_rate),float(0.0));
+            }
+            // CVA for swaps
+            for (unsigned int sw=0; sw<cp.num_of_swap; ++sw){
+                total_value += max(cp.swap_deals[sw]->value(world_state),float(0.0));
+            }
+            cva += world_state.cva_disc_factor * cp.prob_default(world_state.time) * total_value;
+        }
+        cva *= 1-params.recovery_rate;
+        return cva;
+    }
+};
 
 int main(int argc, char *argv[])
 {
@@ -69,8 +98,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    thrust::device_vector<Counterparty> cp_vector;
-    //thrust::host_vector<Counterparty> cp_vector;
+    //thrust::device_vector<Counterparty> cp_vector;
+    thrust::host_vector<Counterparty> cp_vector;
     //std::vector<Counterparty> cp_vector;
 
     // Read deals into memory
@@ -126,56 +155,48 @@ int main(int argc, char *argv[])
 
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
-//    timeval t1, t2;
-    int num_gpus = 0;   // number of CUDA GPUs
-
-    printf("%s Starting...\n\n", argv[0]);
-
     // determine the number of CUDA capable GPUs
+    int num_gpus = 0;
     cudaGetDeviceCount(&num_gpus);
-
     if (num_gpus < 1)
     {
         printf("no CUDA capable devices were detected\n");
         return 1;
     }
-
-    // display CPU and GPU configuration
     printf("number of host CPUs:\t%d\n", omp_get_num_procs());
     printf("number of CUDA devices:\t%d\n", num_gpus);
-
     for (int i = 0; i < num_gpus; i++)
     {
         cudaDeviceProp dprop;
         cudaGetDeviceProperties(&dprop, i);
         printf("   %d: %s\n", i, dprop.name);
     }
-
-    printf("initialize data\n");
-
+    int simulations_per_gpu = params.simulation_num/num_gpus;
 
     // initialize data
-    typedef thrust::device_vector<int> dvec;
+    typedef thrust::device_vector<Counterparty> dvec;
+    typedef thrust::device_vector<float> cva_vector;
     typedef dvec *p_dvec;
+    typedef cva_vector *p_cva_vec;
     std::vector<p_dvec> dvecs;
+    std::vector<p_cva_vec> cva_vectors_std;
 
     for(unsigned int i = 0; i < num_gpus; i++) {
         cudaSetDevice(i);
-        p_dvec temp = new dvec(DSIZE);
+        p_dvec temp = new dvec(cp_vector.size());
         dvecs.push_back(temp);
+        p_cva_vec temp2 = new cva_vector(cp_vector.size());
+        cva_vectors_std.push_back(temp2);
     }
 
-    thrust::host_vector<int> data(DSIZE);
-    thrust::generate(data.begin(), data.end(), rand);
+    //thrust::host_vector<int> data(DSIZE);
+    //thrust::generate(data.begin(), data.end(), rand);
 
     // copy data
     for (unsigned int i = 0; i < num_gpus; i++) {
         cudaSetDevice(i);
-        thrust::copy(data.begin(), data.end(), (*(dvecs[i])).begin());
+        thrust::copy(cp_vector.begin(), cp_vector.end(), (*(dvecs[i])).begin());
     }
-
-    printf("start sort\n");
-//    gettimeofday(&t1,NULL);
 
     // run as many CPU threads as there are CUDA devices
     omp_set_num_threads(num_gpus);  // create as many CPU threads as there are CUDA devices
@@ -183,27 +204,9 @@ int main(int argc, char *argv[])
     {
         unsigned int cpu_thread_id = omp_get_thread_num();
         cudaSetDevice(cpu_thread_id);
-        thrust::sort((*(dvecs[cpu_thread_id])).begin(), (*(dvecs[cpu_thread_id])).end());
+        thrust::transform((*(dvecs[cpu_thread_id])).begin(), (*(dvecs[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva(params, num_of_steps));
         cudaDeviceSynchronize();
     }
-//    gettimeofday(&t2,NULL);
-//    printf("finished\n");
-//    unsigned long et = ((t2.tv_sec * 1000000)+t2.tv_usec) - ((t1.tv_sec * 1000000) + t1.tv_usec);
-//    if (cudaSuccess != cudaGetLastError())
-//        printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-//    printf("sort time = %fs\n", (float)et/(float)(1000000));
-//    // check results
-//    thrust::host_vector<int> result(DSIZE);
-//    thrust::sort(data.begin(), data.end());
-//    for (int i = 0; i < num_gpus; i++)
-//    {
-//        cudaSetDevice(i);
-//        thrust::copy((*(dvecs[i])).begin(), (*(dvecs[i])).end(), result.begin());
-//        for (int j = 0; j < DSIZE; j++)
-//          if (data[j] != result[j]) { printf("mismatch on device %d at index %d, host: %d, device: %d\n", i, j, data[j], result[j]); return 1;}
-//    }
-    printf("Success\n");
-
 
 
     counterparty_deals_infile.close();
