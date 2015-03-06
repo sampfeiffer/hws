@@ -49,13 +49,13 @@ int main(int argc, char *argv[])
     Parameters params(parameters_filename, state0_filename);
     //params.print();
 
+    // Get counterparty data and store info in cp_vector_temp
     std::vector<Counterparty> cp_vector_temp;
-
     Data_reader data;
     data.get_next_data(cp_vector_temp, params);
+    std::cout << "test info " << cp_vector_temp[1].fx_deals[0]->fx_id << "\n";
 
-    thrust::device_vector<Counterparty> cp_vector(cp_vector_temp.size());
-    thrust::copy(cp_vector_temp.begin(), cp_vector_temp.end(), cp_vector.begin());
+    thrust::device_vector<Counterparty> cp_vector(cp_vector_temp.begin(), cp_vector_temp.end());
 
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
@@ -77,10 +77,7 @@ int main(int argc, char *argv[])
     }
 
     data.close_files();
-
     std::cout << "\n";
-
-
     return 0;
 }
 
