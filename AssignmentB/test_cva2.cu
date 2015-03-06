@@ -142,9 +142,11 @@ int main(int argc, char *argv[])
     thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params, num_of_steps));
     //std::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
     std::cout << "here9\n";
+    thrust::host_vector<float> cva_vector_host(cva_vector);
 
-    for (unsigned int i=0; i<cva_vector.size(); ++i){
-        std::cout << "cva " << i+1 << " " << cva_vector[i] << "\n";
+    for (unsigned int i=0; i<cva_vector_host.size(); ++i){
+        std::cout << "here " << i+1 << "\n";
+        std::cout << "cva " << i+1 << " " << cva_vector_host[i] << "\n";
     }
 
     counterparty_deals_infile.close();
