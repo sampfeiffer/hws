@@ -32,7 +32,6 @@ struct calculate_cva{
             cva += world_state.cva_disc_factor * cp.prob_default(world_state.time) * total_value;
         }
         cva *= 1-params.recovery_rate;
-        std::cout << "here2\n";
         return cva;
     }
 };
@@ -144,7 +143,8 @@ int main(int argc, char *argv[])
     //std::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params));
     std::cout << "here9\n";
     std::cout << cva_vector.size() << "\n";
-    thrust::host_vector<float> cva_vector_host(cva_vector);
+    thrust::device_vector<float> cva_vector_host(cva_vector);
+    std::cout << cva_vector_host.size() << "\n";
 
     for (unsigned int i=0; i<cva_vector_host.size(); ++i){
         std::cout << "here " << i+1 << "\n";
