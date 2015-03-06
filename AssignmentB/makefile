@@ -1,10 +1,11 @@
-CPPFLAGS = -std=c++11 -pthread
-GCC = g++
+CPPFLAGS = -std=c++11
+GCC1 = g++
+GCC2 = nvcc
 all: generate_data cva
 generate_data: generate_data.cpp
-	$(GCC) $(CPPFLAGS) generate_data.cpp -o generate_data.out
-cva: cva.cpp
-	$(GCC) $(CPPFLAGS) cva.cpp -o cva.out
+	$(GCC1) $(CPPFLAGS) generate_data.cpp -o generate_data.out
+cva: test_cva2.cu
+	$(GCC2) test_cva2.cu -o test.out
 
 clean:
 	rm generate_data.out
