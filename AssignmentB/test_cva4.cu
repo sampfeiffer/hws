@@ -27,7 +27,7 @@ int main(void)
     // initialize data
     thrust::device_vector<int> array(R * C);
     for (size_t i = 0; i < array.size(); i++)
-    array[i] = dist(rng);
+        array[i] = dist(rng);
 
     // allocate storage for row sums and indices
     thrust::device_vector<int> row_sums(R);

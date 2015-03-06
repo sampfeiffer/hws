@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
         cudaGetDeviceProperties(&dprop, i);
         printf("   %d: %s\n", i, dprop.name);
     }
-    int simulations_per_gpu = params.simulation_num/num_gpus;
+    //int simulations_per_gpu = params.simulation_num/num_gpus;
 
     // initialize data
     typedef thrust::device_vector<Counterparty> dvec;
@@ -207,6 +207,12 @@ int main(int argc, char *argv[])
         thrust::transform((*(dvecs[cpu_thread_id])).begin(), (*(dvecs[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva(params, num_of_steps));
         cudaDeviceSynchronize();
     }
+
+    int sum = 0;
+    for (unsigned int i = 0; i < num_gpus; i++) {
+        sum += thrust::reduce((*(cva_vectors_std[i])).begin(), (*(cva_vectors_std[i])).end());
+    }
+    std::cout << "sum " << sum << "\n";
 
 
     counterparty_deals_infile.close();
