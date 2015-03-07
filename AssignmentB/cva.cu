@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     //params.print();
 
     // Get counterparty data and store info in cp_vector_temp
-    thrust::host_vector<Counterparty> cp_vector_temp;
+    thrust::device_vector<Counterparty> cp_vector_temp;
     Data_reader data;
     data.get_next_data(cp_vector_temp, params);
     //std::cout << "test info " << cp_vector_temp[1].fx_deals[0]->fx_id << "\n";

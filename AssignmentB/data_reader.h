@@ -15,7 +15,7 @@ struct Data_reader{
     std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile;
 
     Data_reader();
-    void get_next_data(thrust::host_vector<Counterparty> &cp_vector, Parameters &params);
+    void get_next_data(thrust::device_vector<Counterparty> &cp_vector, Parameters &params);
     void close_files();
 };
 
@@ -59,8 +59,7 @@ Data_reader::Data_reader()
     }
 }
 
-
-void Data_reader::get_next_data(thrust::host_vector<Counterparty> &cp_vector, Parameters &params)
+void Data_reader::get_next_data(thrust::device_vector<Counterparty> &cp_vector, Parameters &params)
 {
     // Read deals into memory
     int current_id=1, deal_id, deals_handled=0, bucket=0;

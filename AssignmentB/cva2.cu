@@ -3,10 +3,10 @@
 
 #include <vector>
 #include <time.h>
-#include "parameters2.h"
+#include "parameters.h"
 #include "counterparty2.h"
 #include "state.h"
-#include "data_reader.h"
+#include "data_reader2.h"
 
 struct calculate_cva{
     Parameters params;
@@ -15,22 +15,12 @@ struct calculate_cva{
     calculate_cva(Parameters params_, int num_of_steps_) : params(params_), num_of_steps(num_of_steps_)
     {}
     __device__ __host__
-    float operator()(Counterparty &cp) {
+    float operator()(Fx &fx) {
         float cva=0;
-        float total_value;
         State world_state(params);
         for (int i=0; i<num_of_steps; ++i){
-            total_value = 0;
             world_state.sim_next_step();
-            // CVA for fx
-            for (unsigned int fx=0; fx<cp.num_of_fx; ++fx){
-//                total_value += max(cp.fx_deals[fx]->value(world_state.fx_rate),float(0.0));
-            }
-            // CVA for swaps
-            for (unsigned int sw=0; sw<cp.num_of_swap; ++sw){
-//                total_value += max(cp.swap_deals[sw]->value(world_state),float(0.0));
-            }
-            cva += world_state.cva_disc_factor * cp.prob_default(world_state.time) * total_value;
+            cva += world_state.cva_disc_factor * max(fx.value(world_state.fx_rate),float(0.0));;
         }
         cva *= 1-params.recovery_rate;
         return cva;
@@ -50,12 +40,12 @@ int main(int argc, char *argv[])
     //params.print();
 
     // Get counterparty data and store info in cp_vector_temp
-    std::vector<Counterparty> cp_vector_temp;
+    std::vector<Fx> fx_vector_temp;
     Data_reader data;
-    data.get_next_data(cp_vector_temp, params);
+    data.get_next_data(fx_vector_temp, params);
     //std::cout << "test info " << cp_vector_temp[1].fx_deals[0]->fx_id << "\n";
 
-    thrust::device_vector<Counterparty> cp_vector(cp_vector_temp.begin(), cp_vector_temp.end());
+    thrust::device_vector<Fx> fx_vector(fx_vector_temp.begin(), fx_vector_temp.end());
 
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
@@ -63,9 +53,9 @@ int main(int argc, char *argv[])
     std::cout << "Timing: whole program " << float(end_time)/CLOCKS_PER_SEC << " seconds.\n";
 
     //thrust::host_vector<float> cva_vector(cp_vector.size());
-    thrust::device_vector<float> cva_vector(cp_vector.size());
+    thrust::device_vector<float> cva_vector(fx_vector.size());
     std::cout << "here1 " << cva_vector.size() << "\n";
-    thrust::transform(cp_vector.begin(), cp_vector.end(), cva_vector.begin(), calculate_cva(params, num_of_steps));
+    thrust::transform(fx_vector.begin(), fx_vector.end(), cva_vector.begin(), calculate_cva(params, num_of_steps));
     std::cout << "here2\n";
     std::cout << "size1 " << cva_vector.size() << "\n";
     thrust::host_vector<float> cva_vector_host(cva_vector);
