@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         thrust::device_vector<float> cva_vector(fx_vector.size());
         thrust::transform(fx_vector.begin(), fx_vector.end(), cva_vector.begin(), calculate_cva_fx(params, num_of_steps));
         cva_vector_host.clear();
-        cva_vector_host(cva_vector);
+        thrust::copy(cva_vector.begin(), cva_vector.end(), cva_vector_host.begin());
 
 //        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
 //            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << fx_vector_temp[i].fx_id << "\n";
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
         end_time = clock() - program_start_time;
         std::cout << "Timing6 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         cva_vector_host.clear();
-        cva_vector_host(cva_vector);
+        thrust::copy(cva_vector.begin(), cva_vector.end(), cva_vector_host.begin());
         end_time = clock() - program_start_time;
         std::cout << "Timing7 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
 
