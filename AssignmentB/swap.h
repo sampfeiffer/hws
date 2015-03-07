@@ -9,6 +9,7 @@ struct Swap{
     char denomination, position;
     float fixed_rate, hazard_rate;
 
+    __device__ __host__ Swap(){}
     __device__ __host__ Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_, float hazard_rate_); //Constructor
     __device__ __host__ float value(State &world_state);
 };

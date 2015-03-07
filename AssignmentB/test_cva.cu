@@ -4,6 +4,8 @@
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <thrust/reduce.h>
+#include <thrust/functional.h>
 #include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -20,6 +22,20 @@
 #include "parameters.h"
 #include "data_reader.h"
 #include "state.h"
+
+// convert a linear index to a row index
+template <typename T>
+struct linear_index_to_row_index : public thrust::unary_function<T,T>
+{
+    T C; // number of columns
+    __host__ __device__
+    linear_index_to_row_index(T C) : C(C) {}
+    __host__ __device__
+    T operator()(T i)
+    {
+    return i / C;
+    }
+};
 
 struct calculate_cva_fx{
     Parameters params;
@@ -149,6 +165,39 @@ int main(int argc, char *argv[])
             cudaSetDevice(cpu_thread_id);
             thrust::transform((*(dvecs[cpu_thread_id])).begin(), (*(dvecs[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(params, num_of_steps));
             cudaDeviceSynchronize();
+        }
+
+        int R = params.fx_num; // number of rows
+        int C = num_gpus; // number of columns
+        // initialize data
+        thrust::device_vector<int> array(R * C);
+        for (size_t j=0; j<C; j++){
+            for (size_t i=0; i<R; i++){
+                array[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
+            }
+        }
+
+        // allocate storage for row sums and indices
+        thrust::device_vector<int> row_sums(R);
+        thrust::device_vector<int> row_indices(R);
+
+        // compute row sums by summing values with equal row indices
+        thrust::reduce_by_key
+            (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
+            thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
+            array.begin(),
+            row_indices.begin(),
+            row_sums.begin(),
+            thrust::equal_to<int>(),
+            thrust::plus<int>());
+
+        // print data
+        for(int i = 0; i < R; i++)
+        {
+            std::cout << "[ ";
+            for(int j = 0; j < C; j++)
+            std::cout << array[i * C + j] << " ";
+            std::cout << "] = " << row_sums[i] << "\n";
         }
 
         //thrust::transform(fx_vector.begin(), fx_vector.end(), cva_vector.begin(), calculate_cva_fx(params, num_of_steps));
