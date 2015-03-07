@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     // Determine the number of CUDA capable GPUs.
     int num_gpus = 0;
     cudaGetDeviceCount(&num_gpus);
-    if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
+    //if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
     if (num_gpus < 1)
     {
         printf("no CUDA capable devices were detected\n");
@@ -99,13 +99,13 @@ int main(int argc, char *argv[])
             cudaDeviceSynchronize();
         }
 
-//        // Find the average of the cva calculations over the different GPUs
-//        thrust::device_vector<int> cva_sum(R * C);
-//        for (size_t j=0; j<C; j++){
-//            for (size_t i=0; i<R; i++){
-//                cva_sum[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
-//            }
-//        }
+        // Find the average of the cva calculations over the different GPUs
+        thrust::device_vector<int> cva_sum(R * C);
+        for (size_t j=0; j<C; j++){
+            for (size_t i=0; i<R; i++){
+                cva_sum[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
+            }
+        }
 
         // allocate storage for row sums and indices
         thrust::device_vector<int> row_sums(R);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         thrust::reduce_by_key
             (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
             thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
-            (*(cva_vectors_std[j])).begin(),
+            cva_sum.begin(),
             row_indices.begin(),
             row_sums.begin(),
             thrust::equal_to<int>(),
