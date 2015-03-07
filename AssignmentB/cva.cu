@@ -99,13 +99,13 @@ int main(int argc, char *argv[])
             cudaDeviceSynchronize();
         }
 
-        // Find the average of the cva calculations over the different GPUs
-        thrust::device_vector<int> cva_sum(R * C);
-        for (size_t j=0; j<C; j++){
-            for (size_t i=0; i<R; i++){
-                cva_sum[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
-            }
-        }
+//        // Find the average of the cva calculations over the different GPUs
+//        thrust::device_vector<int> cva_sum(R * C);
+//        for (size_t j=0; j<C; j++){
+//            for (size_t i=0; i<R; i++){
+//                cva_sum[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
+//            }
+//        }
 
         // allocate storage for row sums and indices
         thrust::device_vector<int> row_sums(R);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         thrust::reduce_by_key
             (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
             thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
-            cva_sum.begin(),
+            (*(cva_vectors_std[j])).begin(),
             row_indices.begin(),
             row_sums.begin(),
             thrust::equal_to<int>(),
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
         thrust::device_vector<int> divisor(params.deals_at_once);
         thrust::device_vector<int> cva_average(params.deals_at_once);
         thrust::fill(divisor.begin(), divisor.end(), num_gpus);
-        thrust::transform(cva_sum.begin(), cva_sum.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
+        thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*params.deals_at_once);
 
     }
@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
+            std::cout << "cp_id " << cp_id << "\n";
             total_cva.push_back(cva_temp);
             cva_temp = 0;
             ++cp_id;
@@ -211,7 +212,7 @@ int main(int argc, char *argv[])
         thrust::device_vector<int> divisor(params.deals_at_once);
         thrust::device_vector<int> cva_average(params.deals_at_once);
         thrust::fill(divisor.begin(), divisor.end(), num_gpus);
-        thrust::transform(cva_sum.begin(), cva_sum.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
+        thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*params.deals_at_once);
     }
 
@@ -228,6 +229,7 @@ int main(int argc, char *argv[])
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
+            std::cout << "cp_id " << cp_id << "\n";
             total_cva[cp_id-1] += cva_temp;
             cva_temp = 0;
             ++cp_id;
