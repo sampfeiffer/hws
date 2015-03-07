@@ -288,7 +288,7 @@ int gpu_info(int &num_gpus, Parameters &params)
     }
 
     deals_at_once = min(deals_at_once, params.fx_num);
-    if (params.fx_num % deals_at_once != 0) deals_at_once = (params.fx_num/deals_at_once) - (params.fx_num%deals_at_once); //Mkae sure it divides evenly;
+    if (params.fx_num % deals_at_once != 0) deals_at_once = (params.fx_num/deals_at_once) - (params.fx_num%deals_at_once); //Make sure it divides evenly;
     std::cout << "Deals handled at once " << deals_at_once << "\n";
     return deals_at_once;
 }
