@@ -6,7 +6,6 @@ int bucket_size_fx[5], bucket_size_swap[5];
 
 void deal_distribution(Parameters &params)
 {
-    const char* hazard_buckets_filename="hazard_buckets.dat";
     const char* counterparty_deals_filename="counterparty_deals.dat";
     std::ofstream hazard_buckets, counterparty_deals;
     const int buckets = 5;
@@ -23,23 +22,12 @@ void deal_distribution(Parameters &params)
     }
     bucket_size[buckets-1] = params.counterparty_num;
 
-    hazard_buckets.open(hazard_buckets_filename);
-    if (!hazard_buckets.is_open()){
-        std::cout << "ERROR: " << hazard_buckets_filename << " hazard_buckets.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
-    for (int i=0; i<buckets; ++i){
-        hazard_buckets << bucket_size[i] << " ";
-    }
-    hazard_buckets.close();
-
     //Put aside a mix of counterparty_num (1,000,000) fx and swaps to
     //make sure that each counterparty has a least one deal.
     std::binomial_distribution<int> distribution_aside(params.counterparty_num,0.5);
     int fx_aside = distribution_aside(generator);
     int swap_aside = params.counterparty_num - fx_aside;
     double fx_cutoff = double(fx_aside)/params.counterparty_num;
-
 
 
     //Assign number of fx and swaps in each bucket.
@@ -59,7 +47,7 @@ void deal_distribution(Parameters &params)
 
     int num_of_deals, fx_start_size, swap_start_size;
     int counterparty_id = 1, fx_id = 1, swap_id = params.fx_num+1;
-    for (int i=0; i<5; ++i){
+    for (int i=0; i<buckets; ++i){
         bucket_size_fx[i] = 0;
         bucket_size_swap[i] = 0;
     }
@@ -71,16 +59,21 @@ void deal_distribution(Parameters &params)
         exit(1);
     }
 
+    int num_in_bucket;
     // In each bucket...
     for (int i=0; i<buckets; ++i){
         // In each counterparty...
         fx_start_size = fx_dist[i];
         swap_start_size = swap_dist[i];
-        for (int j=0; j<bucket_size[i]; ++j){
+
+        if (i==0) num_in_bucket = bucket_size[i];
+        else num_in_bucket = bucket_size[i]-bucket_size[i-1];
+
+        for (int j=0; j<num_in_bucket; ++j){
             // FX deals
             if (fx_dist[i] > 0){
-                if (j<bucket_size[i]-1){
-                    std::binomial_distribution<int> distribution_fx(fx_start_size,1.0/bucket_size[i]);
+                if (j<num_in_bucket-1){
+                    std::binomial_distribution<int> distribution_fx(fx_start_size,1.0/num_in_bucket);
                     num_of_deals = std::min(distribution_fx(generator),fx_dist[i]);
                 }
                 else {
@@ -113,8 +106,8 @@ void deal_distribution(Parameters &params)
 
             // Swap deals
             if (swap_dist[i] > 0){
-                if (j<bucket_size[i]-1){
-                    std::binomial_distribution<int> distribution_swap(swap_start_size,1.0/bucket_size[i]);
+                if (j<num_in_bucket-1){
+                    std::binomial_distribution<int> distribution_swap(swap_start_size,1.0/num_in_bucket);
                     num_of_deals = std::min(distribution_swap(generator), swap_dist[i]);
                 }
                 else {
@@ -138,9 +131,6 @@ void deal_distribution(Parameters &params)
     for (int i=1; i<5; ++i){
         bucket_size_fx[i] += bucket_size_fx[i-1];
         bucket_size_swap[i] += bucket_size_swap[i-1];
-    }
-    for (int i=0; i<5; ++i){
-        std::cout << bucket_size_fx[i] << " " << bucket_size_swap[i] << "\n";
     }
 }
 

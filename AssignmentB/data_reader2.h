@@ -7,7 +7,6 @@
 struct Data_reader{
 
     int fx_start_location, swap_start_location;
-    int hazard_buckets[5];
     std::ifstream fx_details_infile, swap_details_infile;
 
     Data_reader();
@@ -21,24 +20,13 @@ Data_reader::Data_reader()
     fx_start_location = 0;
     swap_start_location = 0;
 
-    const char* hazard_buckets_filename="hazard_buckets.dat";
     const char* fx_details_filename="fx_details.dat";
     const char* swap_details_filename="swap_details.dat";
-
-    // Get the list of hazard rate bucket endpoints
-    std::ifstream hazard_buckets_infile;
-    hazard_buckets_infile.open(hazard_buckets_filename);
-    if (!hazard_buckets_infile.is_open()){
-        std::cout << "ERROR: hazard_buckets.dat file could not be opened. Make sure to generate the bank data first. Exiting.\n";
-        exit(1);
-    }
-    for (int i=0; i<5; ++i) hazard_buckets_infile >> hazard_buckets[i];
-    hazard_buckets_infile.close();
 
     // Open the deal details
     fx_details_infile.open(fx_details_filename);
     if (!fx_details_infile.is_open()){
-        std::cout << "ERROR: fx_details.dat file could not be opened. Exiting.\n";
+        std::cout << "ERROR: fx_details.dat file could not be opened. Make sure to generate the bank data first. Exiting.\n";
         exit(1);
     }
     swap_details_infile.open(swap_details_filename);

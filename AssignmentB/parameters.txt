@@ -1,6 +1,6 @@
-Number of counterparties,200
-Number of fx deals,2000
-Number of swap deals,2000
+Number of counterparties,50
+Number of fx deals,500
+Number of swap deals,500
 Horizon in years,2
 Timestep size in days,1
 Recovery rate,0.4

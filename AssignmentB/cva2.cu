@@ -83,33 +83,15 @@ int main(int argc, char *argv[])
 //        }
     }
 
-    end_time = clock() - program_start_time;
-    std::cout << "Timing0 " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
-
     std::vector<Swap> swap_vector_temp;
     for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
-        end_time = clock() - program_start_time;
-        std::cout << "Timing1 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         // Get swap deal data
         swap_vector_temp.clear();
-        end_time = clock() - program_start_time;
-        std::cout << "Timing2 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         data.get_next_data_swap(swap_vector_temp, params);
-        end_time = clock() - program_start_time;
-        std::cout << "Timing3 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         thrust::device_vector<Swap> swap_vector(swap_vector_temp.begin(), swap_vector_temp.end());
-        end_time = clock() - program_start_time;
-        std::cout << "Timing4 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         thrust::device_vector<float> cva_vector(swap_vector.size());
-        end_time = clock() - program_start_time;
-        std::cout << "Timing5 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         thrust::transform(swap_vector.begin(), swap_vector.end(), cva_vector.begin(), calculate_cva_swap(params, num_of_steps));
-        cudaDeviceSynchronize();
-        end_time = clock() - program_start_time;
-        std::cout << "Timing6 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         thrust::host_vector<float> cva_vector_host(cva_vector);
-        end_time = clock() - program_start_time;
-        std::cout << "Timing7 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
 
 //        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
 //            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << swap_vector_temp[i].swap_id << "\n";
@@ -119,6 +101,19 @@ int main(int argc, char *argv[])
     //multiply by recovery
 
     data.close_files();
+
+    const char* counterparty_deals_filename="counterparty_deals.dat";
+    std::ifstream counterparty_deals_infile;
+    counterparty_deals_infile.open(counterparty_deals_filename);
+    if (!counterparty_deals_infile.is_open()){
+        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
+        exit(1);
+    }
+
+
+
+    counterparty_deals_infile.close();
+
     end_time = clock() - program_start_time;
     std::cout << "Timing: whole program " << float(end_time)/CLOCKS_PER_SEC << " seconds.\n";
     std::cout << "\n";
