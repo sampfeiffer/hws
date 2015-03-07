@@ -3,7 +3,7 @@
 # Typical job script to run a 1 CPU, 1 GPU batch job in the production queue
 # 
 #PBS -q production
-#PBS -N test_job
+#PBS -N openmp_job
 #PBS -l select=1:ncpus=8
 #PBS -l place=free
 #PBS -V

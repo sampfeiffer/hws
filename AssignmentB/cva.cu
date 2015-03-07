@@ -1,87 +1,26 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/reduce.h>
-#include <thrust/functional.h>
-#include <stdio.h>
+
+//#include <stdio.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <omp.h>
-#include <stdlib.h>
-#include <thrust/sort.h>
+//#include <stdlib.h>
+//#include <thrust/sort.h>
 #include <thrust/copy.h>
 #include <sys/time.h>
-
 #include <vector>
 #include <time.h>
 #include <numeric>
 #include "parameters.h"
 #include "data_reader.h"
 #include "state.h"
-
-// convert a linear index to a row index
-template <typename T>
-struct linear_index_to_row_index : public thrust::unary_function<T,T>
-{
-    T C; // number of columns
-    __host__ __device__
-    linear_index_to_row_index(T C) : C(C) {}
-    __host__ __device__
-    T operator()(T i)
-    {
-    return i / C;
-    }
-};
-
-struct calculate_cva_fx{
-    Parameters params;
-    int num_of_steps;
-
-    calculate_cva_fx(Parameters params_, int num_of_steps_) : params(params_), num_of_steps(num_of_steps_)
-    {}
-    __device__ __host__
-    float operator()(Fx &fx) {
-        float cva, sum=0;
-        float prob_default;
-        for (int path=0; path<params.simulation_num; ++path){
-            cva=0;
-            State world_state(params);
-            for (int i=0; i<num_of_steps; ++i){
-                world_state.sim_next_step();
-                prob_default = std::exp(-fx.hazard_rate*(world_state.time-1)/float(360.0)) - std::exp(-fx.hazard_rate*world_state.time/float(360.0));
-                cva += world_state.cva_disc_factor * prob_default * max(fx.value(world_state.fx_rate),float(0.0));
-            }
-            sum += cva;
-        }
-        return sum/params.simulation_num;
-    }
-};
-
-struct calculate_cva_swap{
-    Parameters params;
-    int num_of_steps;
-
-    calculate_cva_swap(Parameters params_, int num_of_steps_) : params(params_), num_of_steps(num_of_steps_)
-    {}
-    __device__ __host__
-    float operator()(Swap &sw) {
-        float cva, sum=0;
-        float prob_default;
-        for (int path=0; path<params.simulation_num; ++path){
-            cva=0;
-            State world_state(params);
-            for (int i=0; i<num_of_steps; ++i){
-                world_state.sim_next_step();
-                prob_default = std::exp(-sw.hazard_rate*(world_state.time-1)/float(360.0)) - std::exp(-sw.hazard_rate*world_state.time/float(360.0));
-                cva += world_state.cva_disc_factor * prob_default * max(sw.value(world_state),float(0.0));
-            }
-            sum += cva;
-        }
-        return sum/params.simulation_num;
-    }
-};
+#include "functors.h"
 
 int main(int argc, char *argv[])
 {
+    // Strat timing the program
     clock_t program_start_time, mid_time, end_time;
     program_start_time = clock();
 
@@ -92,7 +31,7 @@ int main(int argc, char *argv[])
     Parameters params(parameters_filename, state0_filename);
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
-    // determine the number of CUDA capable GPUs
+    // Determine the number of CUDA capable GPUs.
     int num_gpus = 0;
     cudaGetDeviceCount(&num_gpus);
     if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
@@ -109,7 +48,7 @@ int main(int argc, char *argv[])
         cudaGetDeviceProperties(&dprop, i);
         printf("   %d: %s\n", i, dprop.name);
     }
-    //int simulations_per_gpu = params.simulation_num/num_gpus;
+    int simulations_per_gpu = params.simulation_num/num_gpus;
 
 
     const char* counterparty_deals_filename="counterparty_deals.dat";
@@ -157,11 +96,10 @@ int main(int argc, char *argv[])
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
-            thrust::transform((*(dvecs[cpu_thread_id])).begin(), (*(dvecs[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(params, num_of_steps));
+            thrust::transform((*(dvecs[cpu_thread_id])).begin(), (*(dvecs[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(params, num_of_steps, simulations_per_gpu));
             cudaDeviceSynchronize();
         }
 
-        // initialize data
         thrust::device_vector<int> cva_sum(R * C);
         for (size_t j=0; j<C; j++){
             for (size_t i=0; i<R; i++){
@@ -243,7 +181,7 @@ int main(int argc, char *argv[])
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
-            thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_swap(params, num_of_steps));
+            thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_swap(params, num_of_steps, simulations_per_gpu));
             cudaDeviceSynchronize();
         }
 
