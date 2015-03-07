@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
     int cp_id=1, cp_id_read, deal_id_read=0;
     float cva_temp=0;
     std::vector<float> total_cva;
-    int temp=1;
+    int temp=0;
 
     counterparty_deals_infile >> cp_id_read;
     for (int i=0; i<total_deals; ++i){
@@ -141,11 +141,12 @@ int main(int argc, char *argv[])
     cva_temp=0;
     counterparty_deals_infile.seekg(0,counterparty_deals_infile.beg);
     counterparty_deals_infile >> cp_id_read;
+    temp=500;
     for (int i=0; i<total_deals; ++i){
         counterparty_deals_infile >> deal_id_read;
         if (deal_id_read > params.fx_num){
             cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
-            if (deal_id_read != temp+1) std::cout << "problem " << deal_id_read << " " << temp << "\n";
+            if (deal_id_read != temp+1) std::cout << "problem " << deal_id_read << " " << temp << " " << cp_id_read << "\n";
             temp = deal_id_read;
         }
         counterparty_deals_infile >> cp_id_read;
