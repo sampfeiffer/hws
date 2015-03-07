@@ -1,9 +1,6 @@
 #ifndef DATA_READER_INCLUDED
 #define DATA_READER_INCLUDED
 
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-
 #include <fstream>
 #include <vector>
 
@@ -15,7 +12,7 @@ struct Data_reader{
     std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile;
 
     Data_reader();
-    void get_next_data(thrust::host_vector<Counterparty> &cp_vector, Parameters &params);
+    void get_next_data(std::vector<Counterparty> &cp_vector, Parameters &params);
     void close_files();
 };
 
@@ -27,7 +24,6 @@ Data_reader::Data_reader()
     hazard_rate=0.10;
 
     const char* hazard_buckets_filename="hazard_buckets.dat";
-    const char* counterparty_deals_filename="counterparty_deals.dat";
     const char* fx_details_filename="fx_details.dat";
     const char* swap_details_filename="swap_details.dat";
 
@@ -41,12 +37,7 @@ Data_reader::Data_reader()
     for (int i=0; i<5; ++i) hazard_buckets_infile >> hazard_buckets[i];
     hazard_buckets_infile.close();
 
-    // Open the counterparty deals and deal details
-    counterparty_deals_infile.open(counterparty_deals_filename);
-    if (!counterparty_deals_infile.is_open()){
-        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
+    // Open the deal details
     fx_details_infile.open(fx_details_filename);
     if (!fx_details_infile.is_open()){
         std::cout << "ERROR: fx_details.dat file could not be opened. Exiting.\n";
@@ -60,7 +51,7 @@ Data_reader::Data_reader()
 }
 
 
-void Data_reader::get_next_data(thrust::host_vector<Counterparty> &cp_vector, Parameters &params)
+void Data_reader::get_next_data(std::vector<Counterparty> &cp_vector, Parameters &params)
 {
     // Read deals into memory
     int current_id=1, deal_id, deals_handled=0, bucket=0;
@@ -117,7 +108,6 @@ void Data_reader::get_next_data(thrust::host_vector<Counterparty> &cp_vector, Pa
 
 void Data_reader::close_files()
 {
-    counterparty_deals_infile.close();
     fx_details_infile.close();
     swap_details_infile.close();
 }
