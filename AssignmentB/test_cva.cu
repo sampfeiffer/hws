@@ -94,6 +94,7 @@ int main(int argc, char *argv[])
     // determine the number of CUDA capable GPUs
     int num_gpus = 0;
     cudaGetDeviceCount(&num_gpus);
+    if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
     if (num_gpus < 1)
     {
         printf("no CUDA capable devices were detected\n");
@@ -167,7 +168,7 @@ int main(int argc, char *argv[])
             cudaDeviceSynchronize();
         }
 
-        int R = params.fx_num; // number of rows
+        int R = params.deals_at_once; // number of rows
         int C = num_gpus; // number of columns
         // initialize data
         thrust::device_vector<int> cva_average(R * C);
