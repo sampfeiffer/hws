@@ -1,6 +1,6 @@
 Number of counterparties,50
-Number of fx deals,500
-Number of swap deals,500
+Number of fx deals,5000
+Number of swap deals,5000
 Horizon in years,2
 Timestep size in days,1
 Recovery rate,0.4
@@ -29,7 +29,7 @@ Euro Nelson-Siegel sigma0,0.01
 Euro Nelson-Siegel sigma1,0.01
 Euro Nelson-Siegel sigma2,0.01
 Euro Nelson-Siegel sigma_tau,0.01
-How many deals should be handled at a time,50
+How many deals should be handled at a time,500
 Days in a year,360
 Fixed rate for cva discounting,0.06
 Number of Monte-Carlo simulations,10

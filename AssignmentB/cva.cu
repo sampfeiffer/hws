@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     // Determine the number of CUDA capable GPUs.
     int num_gpus = 0;
     cudaGetDeviceCount(&num_gpus);
-    //if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
+    if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
     if (num_gpus < 1)
     {
         printf("no CUDA capable devices were detected\n");
