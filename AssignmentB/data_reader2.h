@@ -11,7 +11,8 @@ struct Data_reader{
     std::ifstream fx_details_infile, swap_details_infile;
 
     Data_reader();
-    void get_next_data(std::vector<Fx> &fx_vector, Parameters &params);
+    void get_next_data_fx(std::vector<Fx> &fx_vector, Parameters &params);
+    void get_next_data_swap(std::vector<Swap> &swap_vector, Parameters &params);
     void close_files();
 };
 
@@ -47,11 +48,7 @@ Data_reader::Data_reader()
     }
 }
 
-//each deal must have a hazard rate
-//do all fx first
-// then all swaps
-
-void Data_reader::get_next_data(std::vector<Fx> &fx_vector, Parameters &params)
+void Data_reader::get_next_data_fx(std::vector<Fx> &fx_vector, Parameters &params)
 {
     // Read deals into memory
     int deals_handled=0;
@@ -71,6 +68,32 @@ void Data_reader::get_next_data(std::vector<Fx> &fx_vector, Parameters &params)
         ++deals_handled;
     }
     fx_start_location = fx_details_infile.tellg();
+}
+
+void Data_reader::get_next_data_swap(std::vector<Swap> &swap_vector, Parameters &params)
+{
+    // Read deals into memory
+    int deals_handled=0;
+
+    int swap_id, notional, tenor;
+    char position, denomination;
+    float fixed_rate;
+    float hazard_rate;
+
+    swap_details_infile.seekg(swap_start_location,swap_details_infile.beg);
+
+    while (deals_handled < params.deals_at_once){
+        swap_details_infile >> swap_id;
+        swap_details_infile >> denomination;
+        swap_details_infile >> notional;
+        swap_details_infile >> fixed_rate;
+        swap_details_infile >> tenor;
+        swap_details_infile >> position;
+        swap_details_infile >> hazard_rate;
+        swap_vector.push_back(Swap(swap_id, denomination, notional, fixed_rate, tenor, position, hazard_rate));
+        ++deals_handled;
+    }
+    swap_start_location = swap_details_infile.tellg();
 }
 
 void Data_reader::close_files()
