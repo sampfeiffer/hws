@@ -111,14 +111,14 @@ int main(int argc, char *argv[])
         if (cp_id_read > cp_id){
             total_cva.push_back(cva_temp);
             cva_temp = 0;
+            std::cout << "cva cps " << cp_id << " " << total_cva[cp_id-1] << " " << temp_count << "\n";
             ++cp_id;
-            std::cout << "cva cps " << i << " " << total_cva[i] << " " << temp_count << "\n";
             temp_count=0;
         }
     }
 
     for (unsigned int i=0; i<50; ++i){
-        std::cout << "cva cps " << i << " " << total_cva[i] << "\n";
+        std::cout << "cva deals " << i << " " << cva_vector_host[i] << "\n";
     }
 
     std::vector<Swap> swap_vector_temp;
