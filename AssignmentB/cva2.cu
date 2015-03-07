@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <time.h>
+#include <numeric>
 #include "parameters.h"
 #include "counterparty2.h"
 #include "state.h"
@@ -98,28 +99,21 @@ int main(int argc, char *argv[])
     int cp_id=1, cp_id_read, deal_id_read;
     float cva_temp=0;
     std::vector<float> total_cva;
-    int temp_count=0;
 
     counterparty_deals_infile >> cp_id_read;
     for (int i=0; i<total_deals; ++i){
         counterparty_deals_infile >> deal_id_read;
         if (deal_id_read < params.fx_num){
             cva_temp += cva_vector_host[deal_id_read-1];
-            ++temp_count;
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id){
             total_cva.push_back(cva_temp);
             cva_temp = 0;
-            std::cout << "cva cps " << cp_id << " " << total_cva[cp_id-1] << " " << temp_count << "\n";
             ++cp_id;
-            temp_count=0;
         }
     }
 
-    for (unsigned int i=0; i<50; ++i){
-        std::cout << "cva deals " << i << " " << cva_vector_host[i] << "\n";
-    }
 
     std::vector<Swap> swap_vector_temp;
     for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
@@ -136,8 +130,26 @@ int main(int argc, char *argv[])
 //        }
     }
 
+    cp_id=1;
+    cva_temp=0;
+    counterparty_deals_infile.seekg(0,counterparty_deals_infile.beg);
+    counterparty_deals_infile >> cp_id_read;
+    for (int i=0; i<total_deals; ++i){
+        counterparty_deals_infile >> deal_id_read;
+        if (deal_id_read > params.fx_num){
+            cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
+        }
+        counterparty_deals_infile >> cp_id_read;
+        if (cp_id_read > cp_id){
+            total_cva[cp_id-1] += cva_temp;
+            cva_temp = 0;
+            ++cp_id;
+        }
+    }
+
     std::cout << "size " << cva_vector_host.size() << "\n";
     std::cout << "cva " << thrust::reduce(cva_vector_host.begin(), cva_vector_host.end()) << "\n";
+    std::cout << "cva " << std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
 
     //multiply by recovery
 
