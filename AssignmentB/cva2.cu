@@ -98,24 +98,25 @@ int main(int argc, char *argv[])
     int cp_id=1, cp_id_read, deal_id_read;
     float cva_temp=0;
     std::vector<float> total_cva;
+    int temp_count=0;
 
     counterparty_deals_infile >> cp_id_read;
     for (int i=0; i<total_deals; ++i){
         counterparty_deals_infile >> deal_id_read;
         if (deal_id_read < params.fx_num){
             cva_temp += cva_vector_host[deal_id_read-1];
+            ++temp_count;
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id){
             total_cva.push_back(cva_temp);
             cva_temp = 0;
             ++cp_id;
+            std::cout << "cva cps " << i << " " << total_cva[i] << " " << temp_count << "\n";
+            temp_count=0;
         }
     }
 
-    for (unsigned int i=0; i<50; ++i){
-        std::cout << "cva deals " << i << " " << cva_vector_host[i] << "\n";
-    }
     for (unsigned int i=0; i<50; ++i){
         std::cout << "cva cps " << i << " " << total_cva[i] << "\n";
     }
