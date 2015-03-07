@@ -17,10 +17,12 @@ struct calculate_cva{
     __device__ __host__
     float operator()(Fx &fx) {
         float cva=0;
+        float prob_default;
         State world_state(params);
         for (int i=0; i<num_of_steps; ++i){
             world_state.sim_next_step();
-            cva += world_state.cva_disc_factor * max(fx.value(world_state.fx_rate),float(0.0));;
+            prob_default = std::exp(-fx.hazard_rate*(world_state.time-1)/float(360.0)) - std::exp(-fx.hazard_rate*world_state.time/float(360.0));
+            cva += world_state.cva_disc_factor * prob_default * max(fx.value(world_state.fx_rate),float(0.0));;
         }
         cva *= 1-params.recovery_rate;
         return cva;

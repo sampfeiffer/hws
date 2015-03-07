@@ -47,25 +47,30 @@ Data_reader::Data_reader()
     }
 }
 
+//each deal must have a hazard rate
+//do all fx first
+// then all swaps
+
 void Data_reader::get_next_data(std::vector<Fx> &fx_vector, Parameters &params)
 {
     // Read deals into memory
     int deals_handled=0;
 
     int fx_id, notional;
+    float hazard_rate;
     char position;
 
     fx_details_infile.seekg(fx_start_location,fx_details_infile.beg);
 
-    while (deals_handled <= params.deals_at_once){
+    while (deals_handled < params.deals_at_once){
         fx_details_infile >> fx_id;
         fx_details_infile >> notional;
         fx_details_infile >> position;
-        fx_vector.push_back(Fx(fx_id, notional, position));
+        fx_details_infile >> hazard_rate;
+        fx_vector.push_back(Fx(fx_id, notional, position, hazard_rate));
         ++deals_handled;
     }
     fx_start_location = fx_details_infile.tellg();
-
 }
 
 void Data_reader::close_files()

@@ -2,6 +2,8 @@
 #include "parameters.h"
 #include <cmath>
 
+int bucket_size_fx[5], bucket_size_swap[5];
+
 void deal_distribution(Parameters &params)
 {
     const char* hazard_buckets_filename="hazard_buckets.dat";
@@ -57,6 +59,10 @@ void deal_distribution(Parameters &params)
 
     int num_of_deals, fx_start_size, swap_start_size;
     int counterparty_id = 1, fx_id = 1, swap_id = params.fx_num+1;
+    for (int i=0; i<5; ++i){
+        bucket_size_fx[i] = 0;
+        bucket_size_swap[i] = 0;
+    }
 
 
     counterparty_deals.open(counterparty_deals_filename);
@@ -86,6 +92,7 @@ void deal_distribution(Parameters &params)
                     ++fx_id;
                     --fx_dist[i];
                 }
+                bucket_size_fx[i] += num_of_deals;
             }
 
             // Figure out if the single necessary deal is an fx or swap.
@@ -94,12 +101,14 @@ void deal_distribution(Parameters &params)
                 counterparty_deals << counterparty_id << " " << fx_id << "\n";
                 ++fx_id;
                 --fx_aside;
+                ++(bucket_size_fx[i]);
             }
             else{
                 //std::cout << counterparty_id << " " << swap_id << " bucket" << i+1 << " swapleft" << "ASIDE" << "\n";
                 counterparty_deals << counterparty_id << " " << swap_id << "\n";
                 ++swap_id;
                 --swap_aside;
+                ++(bucket_size_swap[i]);
             }
 
             // Swap deals
@@ -117,6 +126,7 @@ void deal_distribution(Parameters &params)
                     ++swap_id;
                     --swap_dist[i];
                 }
+                bucket_size_swap[i] += num_of_deals;
             }
 
             ++counterparty_id;
@@ -125,6 +135,13 @@ void deal_distribution(Parameters &params)
     }
 
     counterparty_deals.close();
+    for (int i=1; i<5; ++i){
+        bucket_size_fx[i] += bucket_size_fx[i-1];
+        bucket_size_swap[i] += bucket_size_swap[i-1];
+    }
+    for (int i=0; i<5; ++i){
+        std::cout << bucket_size_fx[i] << " " << bucket_size_swap[i] << "\n";
+    }
 }
 
 void assign_deal_details(Parameters &params)
@@ -144,12 +161,26 @@ void assign_deal_details(Parameters &params)
         exit(1);
     }
 
+    int fx_count=0, swap_count=0, fx_bucket=0, swap_bucket=0;
+    float hazard_rate=0.10;
     // Randomly assign fx and swap parameters according to the specification
     for (int fx_id=1; fx_id<=params.fx_num; ++fx_id){
-        fx_details << fx_id << " " << (rand()%400000) + 800000 << " " << ((rand()%10<6)?"l":"s") << "\n";
+        if (fx_count > bucket_size_fx[fx_bucket]){
+            ++fx_bucket;
+            hazard_rate -= 0.02;
+        }
+        fx_details << fx_id << " " << (rand()%400000) + 800000 << " " << ((rand()%10<6)?"l":"s") << " " << hazard_rate << "\n";
+        ++fx_count;
     }
+
+    hazard_rate=0.10;
     for (int swap_id=params.fx_num+1; swap_id<=params.fx_num+params.swap_num; ++swap_id){
-        swap_details << swap_id << " " << ((rand()%2)?"u":"e") << " " << (rand()%400000) + 800000 << " " << ((rand()%7)+2)/100.0 << " " << (rand()%49)+2 << " " << ((rand()%20<9)?"l":"s") << "\n";
+    if (swap_count > bucket_size_swap[swap_bucket]){
+            ++swap_bucket;
+            hazard_rate -= 0.02;
+        }
+        swap_details << swap_id << " " << ((rand()%2)?"u":"e") << " " << (rand()%400000) + 800000 << " " << ((rand()%7)+2)/100.0 << " " << (rand()%49)+2 << " " << ((rand()%20<9)?"l":"s") << " " << hazard_rate << "\n";
+        ++swap_count;
     }
 
     fx_details.close();
