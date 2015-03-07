@@ -17,6 +17,7 @@ struct linear_index_to_row_index : public thrust::unary_function<T,T>
     }
 };
 
+// Calculate the cva of an FX deal over a specified number of paths.
 struct calculate_cva_fx{
     Parameters params;
     int num_of_steps, paths_per_gpu;
@@ -41,6 +42,7 @@ struct calculate_cva_fx{
     }
 };
 
+// Calculate the cva of an swap over a specified number of paths.
 struct calculate_cva_swap{
     Parameters params;
     int num_of_steps, paths_per_gpu;

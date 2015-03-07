@@ -1,18 +1,16 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/reduce.h>
-
-//#include <stdio.h>
+#include <thrust/copy.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <omp.h>
-//#include <stdlib.h>
-//#include <thrust/sort.h>
-#include <thrust/copy.h>
-#include <sys/time.h>
+
 #include <vector>
-#include <time.h>
 #include <numeric>
+#include <sys/time.h>
+#include <time.h>
+
 #include "parameters.h"
 #include "data_reader.h"
 #include "state.h"
@@ -48,7 +46,8 @@ int main(int argc, char *argv[])
         cudaGetDeviceProperties(&dprop, i);
         printf("   %d: %s\n", i, dprop.name);
     }
-    int simulations_per_gpu = params.simulation_num/num_gpus;
+
+    int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
 
 
     const char* counterparty_deals_filename="counterparty_deals.dat";
@@ -91,7 +90,7 @@ int main(int argc, char *argv[])
         }
 
         // run as many CPU threads as there are CUDA devices
-        omp_set_num_threads(num_gpus);  // create as many CPU threads as there are CUDA devices
+        omp_set_num_threads(num_gpus);
         #pragma omp parallel
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
@@ -100,6 +99,7 @@ int main(int argc, char *argv[])
             cudaDeviceSynchronize();
         }
 
+        // Find the average of the cva calculations over the different GPUs
         thrust::device_vector<int> cva_sum(R * C);
         for (size_t j=0; j<C; j++){
             for (size_t i=0; i<R; i++){
@@ -129,6 +129,7 @@ int main(int argc, char *argv[])
 
     }
 
+    // Convert CVA for FX deals into CVA for counterparties
     int total_deals = params.fx_num + params.swap_num;
     int cp_id=1, cp_id_read, deal_id_read;
     float cva_temp=0;
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
             cva_temp += cva_vector_host[deal_id_read-1];
         }
         counterparty_deals_infile >> cp_id_read;
-        if (cp_id_read > cp_id){
+        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
             total_cva.push_back(cva_temp);
             cva_temp = 0;
             ++cp_id;
@@ -176,7 +177,7 @@ int main(int argc, char *argv[])
         }
 
         // run as many CPU threads as there are CUDA devices
-        omp_set_num_threads(num_gpus);  // create as many CPU threads as there are CUDA devices
+        omp_set_num_threads(num_gpus);
         #pragma omp parallel
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
@@ -214,6 +215,7 @@ int main(int argc, char *argv[])
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*params.deals_at_once);
     }
 
+    // Convert CVA for swaps into CVA for counterparties
     cp_id=1;
     cva_temp=0;
     counterparty_deals_infile.clear(); //gets rid of eof flag
@@ -225,7 +227,7 @@ int main(int argc, char *argv[])
             cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
         }
         counterparty_deals_infile >> cp_id_read;
-        if (cp_id_read > cp_id){
+        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
             total_cva[cp_id-1] += cva_temp;
             cva_temp = 0;
             ++cp_id;
