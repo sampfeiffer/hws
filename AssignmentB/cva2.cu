@@ -97,15 +97,18 @@ int main(int argc, char *argv[])
     std::cout << "cva " << thrust::reduce(cva_vector_host.begin(), cva_vector_host.end()) << "\n";
 
     int total_deals = params.fx_num + params.swap_num;
-    int cp_id=1, cp_id_read, deal_id_read;
+    int cp_id=1, cp_id_read, deal_id_read=0;
     float cva_temp=0;
     std::vector<float> total_cva;
+    int temp=1;
 
     counterparty_deals_infile >> cp_id_read;
     for (int i=0; i<total_deals; ++i){
         counterparty_deals_infile >> deal_id_read;
         if (deal_id_read <= params.fx_num){
             cva_temp += cva_vector_host[deal_id_read-1];
+            if (deal_id_read != temp+1) std::cout << "problem " << deal_id_read << " " << temp << "\n";
+            temp = deal_id_read;
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id){
@@ -119,6 +122,7 @@ int main(int argc, char *argv[])
 
 
     std::vector<Swap> swap_vector_temp;
+    thrust::fill(cva_vector_host.begin(), cva_vector_host.end(), 0);
     for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
         // Get swap deal data
         swap_vector_temp.clear();
@@ -141,6 +145,8 @@ int main(int argc, char *argv[])
         counterparty_deals_infile >> deal_id_read;
         if (deal_id_read > params.fx_num){
             cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
+            if (deal_id_read != temp+1) std::cout << "problem " << deal_id_read << " " << temp << "\n";
+            temp = deal_id_read;
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id){
