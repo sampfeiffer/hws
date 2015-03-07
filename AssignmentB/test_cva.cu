@@ -172,7 +172,6 @@ int main(int argc, char *argv[])
         // allocate storage for row sums and indices
         thrust::device_vector<int> row_sums(R);
         thrust::device_vector<int> row_indices(R);
-        //std::cout << "here3\n";
 
         // compute row sums by summing values with equal row indices
         thrust::reduce_by_key
@@ -192,36 +191,26 @@ int main(int argc, char *argv[])
 
     }
 
-//    int total_deals = params.fx_num + params.swap_num;
-//    int cp_id=1, cp_id_read, deal_id_read;
-//    float cva_temp=0;
-//    std::vector<float> total_cva;
-//
-//    counterparty_deals_infile >> cp_id_read;
-//    for (int i=0; i<total_deals; ++i){
-//        counterparty_deals_infile >> deal_id_read;
-//        if (deal_id_read <= params.fx_num){
-//            cva_temp += cva_vector_host[deal_id_read-1];
-//        }
-//        counterparty_deals_infile >> cp_id_read;
-//        if (cp_id_read > cp_id){
-//            total_cva.push_back(cva_temp);
-//            cva_temp = 0;
-//            ++cp_id;
-//        }
-//    }
-//
-//
-//
-//
-//
-//
-//
-//    int sum = 0;
-//    for (unsigned int i = 0; i < num_gpus; i++) {
-//        sum += thrust::reduce((*(cva_vectors_std[i])).begin(), (*(cva_vectors_std[i])).end());
-//    }
-//    std::cout << "sum " << sum << "\n";
+    int total_deals = params.fx_num + params.swap_num;
+    int cp_id=1, cp_id_read, deal_id_read;
+    float cva_temp=0;
+    std::vector<float> total_cva;
+
+    counterparty_deals_infile >> cp_id_read;
+    for (int i=0; i<total_deals; ++i){
+        counterparty_deals_infile >> deal_id_read;
+        if (deal_id_read <= params.fx_num){
+            cva_temp += cva_vector_host[deal_id_read-1];
+        }
+        counterparty_deals_infile >> cp_id_read;
+        if (cp_id_read > cp_id){
+            total_cva.push_back(cva_temp);
+            cva_temp = 0;
+            ++cp_id;
+        }
+    }
+
+    std::cout << "cva " << std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
 
     data.close_files();
     counterparty_deals_infile.close();
