@@ -135,12 +135,6 @@ int main(int argc, char *argv[])
         cva_vectors_std.push_back(temp2);
     }
 
-    //thrust::host_vector<int> data(DSIZE);
-    //thrust::generate(data.begin(), data.end(), rand);
-
-    // copy data
-
-
     Data_reader data;
     std::vector<Fx> fx_vector_temp;
     thrust::host_vector<float> cva_vector_host(params.fx_num);
@@ -155,9 +149,6 @@ int main(int argc, char *argv[])
             thrust::copy(fx_vector_temp.begin(), fx_vector_temp.end(), (*(dvecs[i])).begin());
         }
 
-        //thrust::device_vector<Fx> fx_vector(fx_vector_temp.begin(), fx_vector_temp.end());
-        //thrust::device_vector<float> cva_vector(fx_vector.size());
-
         // run as many CPU threads as there are CUDA devices
         omp_set_num_threads(num_gpus);  // create as many CPU threads as there are CUDA devices
         #pragma omp parallel
@@ -171,41 +162,33 @@ int main(int argc, char *argv[])
         int R = params.deals_at_once; // number of rows
         int C = num_gpus; // number of columns
         // initialize data
-        thrust::device_vector<int> cva_average(R * C);
+        thrust::device_vector<int> cva_sum(R * C);
         for (size_t j=0; j<C; j++){
             for (size_t i=0; i<R; i++){
-                cva_average[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
+                cva_sum[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
             }
         }
-        std::cout << "here2\n";
 
         // allocate storage for row sums and indices
         thrust::device_vector<int> row_sums(R);
         thrust::device_vector<int> row_indices(R);
-        std::cout << "here3\n";
+        //std::cout << "here3\n";
 
         // compute row sums by summing values with equal row indices
         thrust::reduce_by_key
             (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
             thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
-            cva_average.begin(),
+            cva_sum.begin(),
             row_indices.begin(),
             row_sums.begin(),
             thrust::equal_to<int>(),
             thrust::plus<int>());
-        std::cout << "here4\n";
-        // print data
-        for(int i = 0; i < R; i++)
-        {
-            std::cout << "[ ";
-            for(int j = 0; j < C; j++)
-            std::cout << cva_average[i * C + j] << " ";
-            std::cout << "] = " << row_sums[i] << "\n";
-        }
-        std::cout << "here5\n";
 
-        //thrust::transform(fx_vector.begin(), fx_vector.end(), cva_vector.begin(), calculate_cva_fx(params, num_of_steps));
-        //thrust::copy(cva_vector.begin(), cva_vector.end(), cva_vector_host.begin()+k*params.deals_at_once);
+        thrust::device_vector<int> divisor(params.deals_at_once);
+        thrust::device_vector<int> cva_average(params.deals_at_once);
+        thrust::fill(divisor.begin(), divisor.end(), num_gpus);
+        thrust::transform(cva_sum.begin(), cva_sum.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
+        thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*params.deals_at_once);
 
     }
 
