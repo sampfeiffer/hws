@@ -119,7 +119,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-
+    int R = params.deals_at_once; // number of rows
+    int C = num_gpus; // number of columns
     // initialize data
     typedef thrust::device_vector<Fx> dvec;
     typedef thrust::device_vector<float> cva_vector;
@@ -139,8 +140,6 @@ int main(int argc, char *argv[])
     std::vector<Fx> fx_vector_temp;
     thrust::host_vector<float> cva_vector_host(params.fx_num);
     for (int k=0; k<params.fx_num/params.deals_at_once; ++k){
-
-
         // Get fx deal data
         fx_vector_temp.clear();
         data.get_next_data_fx(fx_vector_temp, params);
@@ -159,8 +158,6 @@ int main(int argc, char *argv[])
             cudaDeviceSynchronize();
         }
 
-        int R = params.deals_at_once; // number of rows
-        int C = num_gpus; // number of columns
         // initialize data
         thrust::device_vector<int> cva_sum(R * C);
         for (size_t j=0; j<C; j++){
@@ -205,6 +202,85 @@ int main(int argc, char *argv[])
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id){
             total_cva.push_back(cva_temp);
+            cva_temp = 0;
+            ++cp_id;
+        }
+    }
+
+    // initialize data
+    typedef thrust::device_vector<Swap> dvec_swap;
+    typedef dvec_swap *p_dvec_swap;
+    std::vector<p_dvec_swap> dvecs_swap;
+    for(unsigned int i = 0; i < num_gpus; i++) {
+        cudaSetDevice(i);
+        p_dvec_swap temp = new dvec_swap(params.deals_at_once);
+        dvecs_swap.push_back(temp);
+    }
+
+    std::vector<Swap> swap_vector_temp;
+    thrust::fill(cva_vector_host.begin(), cva_vector_host.end(), 0);
+    for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
+        // Get swap deal data
+        swap_vector_temp.clear();
+        data.get_next_data_swap(swap_vector_temp, params);
+
+        for (unsigned int i = 0; i < num_gpus; i++) {
+            cudaSetDevice(i);
+            thrust::copy(swap_vector_temp.begin(), swap_vector_temp.end(), (*(dvecs_swap[i])).begin());
+        }
+
+        // run as many CPU threads as there are CUDA devices
+        omp_set_num_threads(num_gpus);  // create as many CPU threads as there are CUDA devices
+        #pragma omp parallel
+        {
+            unsigned int cpu_thread_id = omp_get_thread_num();
+            cudaSetDevice(cpu_thread_id);
+            thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_swap(params, num_of_steps));
+            cudaDeviceSynchronize();
+        }
+
+        // initialize data
+        thrust::device_vector<int> cva_sum(R * C);
+        for (size_t j=0; j<C; j++){
+            for (size_t i=0; i<R; i++){
+                cva_sum[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
+            }
+        }
+
+        // allocate storage for row sums and indices
+        thrust::device_vector<int> row_sums(R);
+        thrust::device_vector<int> row_indices(R);
+
+        // compute row sums by summing values with equal row indices
+        thrust::reduce_by_key
+            (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
+            thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
+            cva_sum.begin(),
+            row_indices.begin(),
+            row_sums.begin(),
+            thrust::equal_to<int>(),
+            thrust::plus<int>());
+
+        thrust::device_vector<int> divisor(params.deals_at_once);
+        thrust::device_vector<int> cva_average(params.deals_at_once);
+        thrust::fill(divisor.begin(), divisor.end(), num_gpus);
+        thrust::transform(cva_sum.begin(), cva_sum.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
+        thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*params.deals_at_once);
+    }
+
+    cp_id=1;
+    cva_temp=0;
+    counterparty_deals_infile.clear(); //gets rid of eof flag
+    counterparty_deals_infile.seekg(0, counterparty_deals_infile.beg);
+    counterparty_deals_infile >> cp_id_read;
+    for (int i=0; i<total_deals; ++i){
+        counterparty_deals_infile >> deal_id_read;
+        if (deal_id_read > params.fx_num){
+            cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
+        }
+        counterparty_deals_infile >> cp_id_read;
+        if (cp_id_read > cp_id){
+            total_cva[cp_id-1] += cva_temp;
             cva_temp = 0;
             ++cp_id;
         }
