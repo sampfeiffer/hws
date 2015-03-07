@@ -81,7 +81,7 @@ struct calculate_cva_swap{
 
 int main(int argc, char *argv[])
 {
-    clock_t program_start_time, end_time;
+    clock_t program_start_time, mid_time, end_time;
     program_start_time = clock();
 
     const char* parameters_filename="parameters.txt";
@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
         cva_vectors_std.push_back(temp2);
     }
 
+    std::cout << "Starting FX deals\n";
     Data_reader data;
     std::vector<Fx> fx_vector_temp;
     thrust::host_vector<float> cva_vector_host(params.fx_num);
@@ -206,6 +207,11 @@ int main(int argc, char *argv[])
             ++cp_id;
         }
     }
+
+    mid_time = clock();
+    std::cout << "Finished FX deals\n";
+    std::cout << "Timing: FX CVA " << float(mid_time-program_start_time)/CLOCKS_PER_SEC << " seconds.\n";
+    std::cout << "Starting Swap deals\n";
 
     // initialize data
     typedef thrust::device_vector<Swap> dvec_swap;
@@ -286,7 +292,18 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::cout << "cva " << std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
+    end_time = clock();
+    std::cout << "Finished Swap deals\n";
+    std::cout << "Timing: Swap CVA " << float(end_time-mid_time)/CLOCKS_PER_SEC << " seconds.\n";
+
+    std::cout << "-----------------------------------------\n";
+    std::cout << "Counterparty  CVA\n";
+    for (unsigned int cp=1; cp<total_cva.size(); ++cp){
+        std::cout << cp << " " << total_cva[cp-1] << "\n";
+    }
+
+
+    std::cout << "\nGrand Total Bank CVA " << std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
 
     data.close_files();
     counterparty_deals_infile.close();
