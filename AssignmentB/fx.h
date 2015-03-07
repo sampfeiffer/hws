@@ -7,8 +7,9 @@
 struct Fx{
     int fx_id, notional;
     char position;
+    float hazard_rate;
 
-    __device__ __host__ Fx(int fx_id_, int notional_, char position_); //Constructor
+    __device__ __host__ Fx(int fx_id_, int notional_, char position_, float hazard_rate_); //Constructor
     //void print();
     //void print_short();
     __device__ __host__ float value(float fx_rate_cur);
@@ -17,11 +18,12 @@ struct Fx{
 
 // Constructor
 __device__ __host__
-Fx::Fx(int fx_id_, int notional_, char position_)
+Fx::Fx(int fx_id_, int notional_, char position_, float hazard_rate_)
 {
     fx_id = fx_id_;
     notional = notional_;
     position = position_;
+    hazard_rate = hazard_rate_;
 }
 
 //void Fx::print()

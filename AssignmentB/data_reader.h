@@ -1,55 +1,32 @@
 #ifndef DATA_READER_INCLUDED
 #define DATA_READER_INCLUDED
 
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-
 #include <fstream>
 #include <vector>
 
 struct Data_reader{
 
-    int cp_id, bucket, start_location;
-    int hazard_buckets[5];
-    float hazard_rate;
-    std::ifstream counterparty_deals_infile, fx_details_infile, swap_details_infile;
+    int fx_start_location, swap_start_location;
+    std::ifstream fx_details_infile, swap_details_infile;
 
     Data_reader();
-    void get_next_data(thrust::device_vector<Counterparty> &cp_vector, Parameters &params);
+    void get_next_data_fx(std::vector<Fx> &fx_vector, Parameters &params);
+    void get_next_data_swap(std::vector<Swap> &swap_vector, Parameters &params);
     void close_files();
 };
 
 Data_reader::Data_reader()
 {
-    cp_id = 1;
-    bucket = 0;
-    start_location = 2;
-    hazard_rate=0.10;
+    fx_start_location = 0;
+    swap_start_location = 0;
 
-    const char* hazard_buckets_filename="hazard_buckets.dat";
-    const char* counterparty_deals_filename="counterparty_deals.dat";
     const char* fx_details_filename="fx_details.dat";
     const char* swap_details_filename="swap_details.dat";
 
-    // Get the list of hazard rate bucket endpoints
-    std::ifstream hazard_buckets_infile;
-    hazard_buckets_infile.open(hazard_buckets_filename);
-    if (!hazard_buckets_infile.is_open()){
-        std::cout << "ERROR: hazard_buckets.dat file could not be opened. Make sure to generate the bank data first. Exiting.\n";
-        exit(1);
-    }
-    for (int i=0; i<5; ++i) hazard_buckets_infile >> hazard_buckets[i];
-    hazard_buckets_infile.close();
-
-    // Open the counterparty deals and deal details
-    counterparty_deals_infile.open(counterparty_deals_filename);
-    if (!counterparty_deals_infile.is_open()){
-        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
+    // Open the deal details
     fx_details_infile.open(fx_details_filename);
     if (!fx_details_infile.is_open()){
-        std::cout << "ERROR: fx_details.dat file could not be opened. Exiting.\n";
+        std::cout << "ERROR: fx_details.dat file could not be opened. Make sure to generate the bank data first. Exiting.\n";
         exit(1);
     }
     swap_details_infile.open(swap_details_filename);
@@ -59,64 +36,58 @@ Data_reader::Data_reader()
     }
 }
 
-void Data_reader::get_next_data(thrust::device_vector<Counterparty> &cp_vector, Parameters &params)
+void Data_reader::get_next_data_fx(std::vector<Fx> &fx_vector, Parameters &params)
 {
     // Read deals into memory
-    int current_id=1, deal_id, deals_handled=0, bucket=0;
+    int deals_handled=0;
 
-    int fx_id, swap_id, notional, tenor, start_of_data, fx_count, swap_count;
+    int fx_id, notional;
+    float hazard_rate;
+    char position;
+
+    fx_details_infile.seekg(fx_start_location,fx_details_infile.beg);
+
+    while (deals_handled < params.deals_at_once){
+        fx_details_infile >> fx_id;
+        fx_details_infile >> notional;
+        fx_details_infile >> position;
+        fx_details_infile >> hazard_rate;
+        fx_vector.push_back(Fx(fx_id, notional, position, hazard_rate));
+        ++deals_handled;
+    }
+    fx_start_location = fx_details_infile.tellg();
+}
+
+void Data_reader::get_next_data_swap(std::vector<Swap> &swap_vector, Parameters &params)
+{
+    // Read deals into memory
+    int deals_handled=0;
+    //clock_t program_start_time, end_time;
+    //program_start_time = clock();
+
+    int swap_id, notional, tenor;
     char position, denomination;
     float fixed_rate;
+    float hazard_rate;
 
-    counterparty_deals_infile.seekg(start_location,counterparty_deals_infile.beg);
+    swap_details_infile.seekg(swap_start_location,swap_details_infile.beg);
 
-    while (deals_handled <= params.deals_at_once){
-        if (cp_id > hazard_buckets[bucket]){
-            ++bucket;
-            hazard_rate -= 0.02;
-        }
-        start_of_data = counterparty_deals_infile.tellg();
-        fx_count = 0;
-        swap_count = 0;
-
-        do{
-            counterparty_deals_infile >> deal_id;
-            if (deal_id<params.fx_num) ++fx_count;
-            else ++swap_count;
-            counterparty_deals_infile >> current_id;
-        } while(current_id == cp_id);
-        start_location = counterparty_deals_infile.tellg();
-        counterparty_deals_infile.seekg(start_of_data,counterparty_deals_infile.beg);
-
-        Counterparty cp(cp_id, hazard_rate, fx_count, swap_count);
-        do{
-            counterparty_deals_infile >> deal_id;
-            if (deal_id<params.fx_num){
-                fx_details_infile >> fx_id;
-                fx_details_infile >> notional;
-                fx_details_infile >> position;
-                cp.add_fx(fx_id, notional, position);
-            }
-            else {
-                swap_details_infile >> swap_id;
-                swap_details_infile >> denomination;
-                swap_details_infile >> notional;
-                swap_details_infile >> fixed_rate;
-                swap_details_infile >> tenor;
-                swap_details_infile >> position;
-                cp.add_swap(swap_id, denomination, notional, fixed_rate, tenor, position);
-            }
-            ++deals_handled;
-            counterparty_deals_infile >> current_id;
-        } while(current_id == cp_id);
-        cp_vector.push_back(cp);
-        ++cp_id;
+    while (deals_handled < params.deals_at_once){
+        swap_details_infile >> swap_id;
+        swap_details_infile >> denomination;
+        swap_details_infile >> notional;
+        swap_details_infile >> fixed_rate;
+        swap_details_infile >> tenor;
+        swap_details_infile >> position;
+        swap_details_infile >> hazard_rate;
+        swap_vector.push_back(Swap(swap_id, denomination, notional, fixed_rate, tenor, position, hazard_rate));
+        ++deals_handled;
     }
+    swap_start_location = swap_details_infile.tellg();
 }
 
 void Data_reader::close_files()
 {
-    counterparty_deals_infile.close();
     fx_details_infile.close();
     swap_details_infile.close();
 }
