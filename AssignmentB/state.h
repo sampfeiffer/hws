@@ -9,6 +9,8 @@ struct State{
     float fx_rate_beg, fx_rate, fx_vol, cva_disc_factor;
     int time;
     NelsonSiegel amer, euro;
+    //thrust::minstd_rand generator1;
+    //thrust::random::normal_distribution<float> standard_normal1;
 
     __device__ __host__ State(Parameters &params);
     __device__ __host__ void sim_next_step();
@@ -31,11 +33,9 @@ State::State(Parameters &params):
 __device__ __host__
 void State::sim_next_step()
 {
-    thrust::minstd_rand generator1;
-    thrust::random::normal_distribution<float> standard_normal1(0.0f, 1.0f);
     amer.sim_next_step();
     euro.sim_next_step();
-    fx_rate += fx_vol*sqrt(float(step_size/360.0))*standard_normal1(generator1);
+    fx_rate += fx_vol*sqrt(float(step_size/360.0))*amer.standard_normal(amer.generator);
     ++time;
     cva_disc_factor = pow(1+cva_disc_rate, float(-time/360.0));
 }

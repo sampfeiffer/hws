@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
     deals_at_once = min(deals_at_once, params.fx_num);
     if (params.fx_num % deals_at_once != 0) deals_at_once = (params.fx_num/deals_at_once) - (params.fx_num%deals_at_once); //Mkae sure it divides evenly;
-    std::cout << "deals_at_once " << deals_at_once << "\n";
+    std::cout << "Deals handled at once " << deals_at_once << "\n";
     int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
 
 

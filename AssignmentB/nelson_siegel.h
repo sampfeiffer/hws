@@ -14,6 +14,8 @@ struct NelsonSiegel{
     float step_size;
     float betas[4], betas_beg[4];
     float alphas[4], sigmas[4];
+    thrust::minstd_rand generator;
+    thrust::random::normal_distribution<float> standard_normal;
 
     __device__ __host__ NelsonSiegel(float step_size_, float betas_beg_[], float alphas_[], float sigmas_[]);
     __device__ __host__ float yield(float t);
@@ -43,8 +45,6 @@ float NelsonSiegel::yield(float t)
 __device__ __host__
 void NelsonSiegel::sim_next_step()
 {
-    thrust::minstd_rand generator;
-    thrust::random::normal_distribution<float> standard_normal(0.0f, 1.0f);
     for (int i=0; i<4; ++i){
         betas[i] = betas_beg[i] + alphas[i]*(betas_beg[i]-betas[i]) + sigmas[i]*sqrt(step_size/365)*standard_normal(generator);
     }
