@@ -171,7 +171,6 @@ int main(int argc, char *argv[])
         int C = num_gpus; // number of columns
         // initialize data
         thrust::device_vector<int> cva_average(R * C);
-        std::cout << "here1\n";
         for (size_t j=0; j<C; j++){
             for (size_t i=0; i<R; i++){
                 cva_average[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
@@ -182,6 +181,7 @@ int main(int argc, char *argv[])
         // allocate storage for row sums and indices
         thrust::device_vector<int> row_sums(R);
         thrust::device_vector<int> row_indices(R);
+        std::cout << "here3\n";
 
         // compute row sums by summing values with equal row indices
         thrust::reduce_by_key
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
             row_sums.begin(),
             thrust::equal_to<int>(),
             thrust::plus<int>());
-
+        std::cout << "here4\n";
         // print data
         for(int i = 0; i < R; i++)
         {
@@ -201,6 +201,7 @@ int main(int argc, char *argv[])
             std::cout << cva_average[i * C + j] << " ";
             std::cout << "] = " << row_sums[i] << "\n";
         }
+        std::cout << "here5\n";
 
         //thrust::transform(fx_vector.begin(), fx_vector.end(), cva_vector.begin(), calculate_cva_fx(params, num_of_steps));
         //thrust::copy(cva_vector.begin(), cva_vector.end(), cva_vector_host.begin()+k*params.deals_at_once);
