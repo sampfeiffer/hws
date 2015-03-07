@@ -13,7 +13,7 @@ struct Counterparty{
 };
 
 // Constructor
-Counterparty::Counterparty(int cp_id_, float hazard_rate_, int fx_count, int swap_count)
+Counterparty::Counterparty(int cp_id_, int fx_count, int swap_count)
 {
     cp_id = cp_id_;
     num_of_fx = fx_count;
