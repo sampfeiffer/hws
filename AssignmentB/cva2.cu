@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 
     std::vector<Swap> swap_vector_temp;
     for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
+        std::cout << "Timing6 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         // Get swap deal data
         swap_vector_temp.clear();
         data.get_next_data_swap(swap_vector_temp, params);
@@ -102,6 +103,7 @@ int main(int argc, char *argv[])
         end_time = clock() - program_start_time;
         std::cout << "Timing4 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         thrust::host_vector<float> cva_vector_host(cva_vector);
+        std::cout << "Timing5 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
 
 //        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
 //            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << swap_vector_temp[i].swap_id << "\n";
