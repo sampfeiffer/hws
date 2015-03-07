@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     {
         cudaDeviceProp dprop;
         cudaGetDeviceProperties(&dprop, i);
-        printf("   %d: %s. Memory available: %fMB\n", i, dprop.name, dprop.totalGlobalMem / (1024. * 1024.));
+        printf("   %d: %s. Memory available: %dMB\n", i+1, dprop.name, dprop.totalGlobalMem / (1024 * 1024));
         deals_at_once = dprop.totalGlobalMem/100;
     }
 

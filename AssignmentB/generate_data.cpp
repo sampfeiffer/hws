@@ -4,6 +4,7 @@
 
 int bucket_size_fx[5], bucket_size_swap[5];
 
+// Assign Fx deals and Swaps to each counterparty according to the specifications.
 void deal_distribution(Parameters &params)
 {
     const char* counterparty_deals_filename="counterparty_deals.dat";
@@ -134,6 +135,7 @@ void deal_distribution(Parameters &params)
     }
 }
 
+// Assign the details for each deal.
 void assign_deal_details(Parameters &params)
 {
     const char* fx_details_filename="fx_details.dat";

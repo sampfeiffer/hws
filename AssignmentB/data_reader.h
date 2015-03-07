@@ -87,6 +87,7 @@ void Data_reader::get_next_data_swap(std::vector<Swap> &swap_vector, int &deals_
     swap_start_location = swap_details_infile.tellg();
 }
 
+// Close the input files.
 void Data_reader::close_files()
 {
     fx_details_infile.close();

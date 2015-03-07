@@ -25,6 +25,7 @@ Fx::Fx(int fx_id_, int notional_, char position_, float hazard_rate_)
     hazard_rate = hazard_rate_;
 }
 
+// Calculate the value of the FX under the current FX rate
 __device__ __host__
 float Fx::value(float fx_rate_cur)
 {

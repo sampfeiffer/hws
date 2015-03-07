@@ -12,11 +12,12 @@ struct Parameters{
     float amer_betas[4], euro_betas[4];
 
 
-    Parameters(const char* parameters_filename, const char* state0_filename);
+    Parameters(const char* parameters_filename, const char* state0_filename); // Constructor
     const char* get_param(std::ifstream &infile);
     void print();
 };
 
+// Constructor. Read all the paramaters and initial states from the input files.
 Parameters::Parameters(const char* parameters_filename, const char* state0_filename)
 {
     std::ifstream parameters_infile, state0_infile;
@@ -55,14 +56,16 @@ Parameters::Parameters(const char* parameters_filename, const char* state0_filen
     parameters_infile.close();
 }
 
+// Get a single parameter
 const char* Parameters::get_param(std::ifstream &infile)
 {
     std::string text;
-    getline(infile, text, ',');
+    getline(infile, text, ','); // data is always right after a comma
     getline(infile, text);
     return text.c_str();
 }
 
+// Print all the parameters and initial state
 void Parameters::print()
 {
     std::cout << "\nInitial State of the world"

@@ -27,6 +27,7 @@ Swap::Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, i
     hazard_rate = hazard_rate_;
 }
 
+// Calculate the value of the swap in the current world state
 __device__ __host__
 float Swap::value(State &world_state)
 {
