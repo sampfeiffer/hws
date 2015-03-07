@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     counterparty_deals_infile >> cp_id_read;
     for (int i=0; i<total_deals; ++i){
         counterparty_deals_infile >> deal_id_read;
-        if (deal_id_read < params.fx_num){
+        if (deal_id_read <= params.fx_num){
             cva_temp += cva_vector_host[deal_id_read-1];
         }
         counterparty_deals_infile >> cp_id_read;
