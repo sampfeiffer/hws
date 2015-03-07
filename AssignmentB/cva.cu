@@ -32,9 +32,9 @@ int main(int argc, char *argv[])
     int cp_id=1, cp_id_read, deal_id_read, deals_at_once, num_gpus=0, R, C;
     float cva_temp=0;
 
-    typedef thrust::device_vector<Fx> dvec;
+    typedef thrust::device_vector<Fx> dvec_fx;
     typedef thrust::device_vector<float> cva_vector;
-    typedef dvec *p_dvec_fx;
+    typedef dvec_fx *p_dvec_fx;
     typedef cva_vector *p_cva_vec;
     typedef thrust::device_vector<Swap> dvec_swap;
     typedef dvec_swap *p_dvec_swap;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     // initialize data on each GPU
     for(unsigned int i = 0; i < num_gpus; i++) {
         cudaSetDevice(i);
-        p_dvec_fx temp = new dvec(deals_at_once);
+        p_dvec_fx temp = new dvec_fx(deals_at_once);
         dvecs_fx.push_back(temp);
         p_cva_vec temp2 = new cva_vector(deals_at_once);
         cva_vectors_std.push_back(temp2);
