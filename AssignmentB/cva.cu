@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     program_start_time = clock();
 
     void print_results(std::vector<long> &total_cva, float &multiple);
+    int gpu_info(int &num_gpus, Parameters &params);
 
     const char* parameters_filename="parameters.txt";
     const char* state0_filename="state0.txt";
@@ -49,29 +50,9 @@ int main(int argc, char *argv[])
     int total_deals = params.fx_num + params.swap_num;
     float multiple = 1-params.recovery_rate;
 
-    // Determine the number of CUDA capable GPUs.
-    cudaGetDeviceCount(&num_gpus);
-    if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
-    if (num_gpus < 1)
-    {
-        printf("no CUDA capable devices were detected\n");
-        return 1;
-    }
-    printf("number of host CPUs:\t%d\n", omp_get_num_procs());
-    printf("number of CUDA devices:\t%d\n", num_gpus);
-    for (int i = 0; i < num_gpus; i++)
-    {
-        cudaDeviceProp dprop;
-        cudaGetDeviceProperties(&dprop, i);
-        printf("   %d: %s. Memory available: %dMB\n", i+1, dprop.name, int(dprop.totalGlobalMem / (1024 * 1024)));
-        deals_at_once = dprop.totalGlobalMem/100;
-    }
-
-    deals_at_once = min(deals_at_once, params.fx_num);
-    if (params.fx_num % deals_at_once != 0) deals_at_once = (params.fx_num/deals_at_once) - (params.fx_num%deals_at_once); //Mkae sure it divides evenly;
-    std::cout << "Deals handled at once " << deals_at_once << "\n";
+    // Determine the number of CUDA capable GPUs. Calculate the number of deals to handle at a time.
+    deals_at_once = gpu_info(num_gpus, params);
     int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
-
 
     counterparty_deals_infile.open(counterparty_deals_filename);
     if (!counterparty_deals_infile.is_open()){
@@ -283,5 +264,32 @@ void print_results(std::vector<long> &total_cva, float &multiple)
 
     std::cout << "-----------------------------------------\n";
     std::cout << "\nGrand Total Bank CVA " << multiple*std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
+}
+
+int gpu_info(int &num_gpus, Parameters &params)
+{
+    int deals_at_once;
+    // Determine the number of CUDA capable GPUs.
+    cudaGetDeviceCount(&num_gpus);
+    if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
+    if (num_gpus < 1)
+    {
+        printf("no CUDA capable devices were detected\n");
+        return 1;
+    }
+    printf("number of host CPUs:\t%d\n", omp_get_num_procs());
+    printf("number of CUDA devices:\t%d\n", num_gpus);
+    for (int i = 0; i < num_gpus; i++)
+    {
+        cudaDeviceProp dprop;
+        cudaGetDeviceProperties(&dprop, i);
+        printf("   %d: %s. Memory available: %dMB\n", i+1, dprop.name, int(dprop.totalGlobalMem / (1024 * 1024)));
+        deals_at_once = dprop.totalGlobalMem/100;
+    }
+
+    deals_at_once = min(deals_at_once, params.fx_num);
+    if (params.fx_num % deals_at_once != 0) deals_at_once = (params.fx_num/deals_at_once) - (params.fx_num%deals_at_once); //Mkae sure it divides evenly;
+    std::cout << "Deals handled at once " << deals_at_once << "\n";
+    return deals_at_once;
 }
 
