@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename, state0_filename);
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
+    int deals_at_once;
 
     // Determine the number of CUDA capable GPUs.
     int num_gpus = 0;
@@ -44,9 +45,13 @@ int main(int argc, char *argv[])
     {
         cudaDeviceProp dprop;
         cudaGetDeviceProperties(&dprop, i);
-        printf("   %d: %s. Memory available: %d\n", i, dprop.name, dprop.totalGlobalMem / (1024. * 1024.));
+        printf("   %d: %s. Memory available: %fMB\n", i, dprop.name, dprop.totalGlobalMem / (1024. * 1024.));
+        deals_at_once = dprop.totalGlobalMem/100;
     }
 
+    std::cout << "deals_at_once " << deals_at_once << "\n";
+    deals_at_once = min(deals_at_once, params.fx_num);
+    std::cout << "deals_at_once " << deals_at_once << "\n";
     int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
 
 
@@ -143,7 +148,6 @@ int main(int argc, char *argv[])
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
-            std::cout << "cp_id " << cp_id << "\n";
             total_cva.push_back(cva_temp);
             cva_temp = 0;
             ++cp_id;
@@ -229,7 +233,6 @@ int main(int argc, char *argv[])
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
-            std::cout << "cp_id " << cp_id << "\n";
             total_cva[cp_id-1] += cva_temp;
             cva_temp = 0;
             ++cp_id;
@@ -243,8 +246,8 @@ int main(int argc, char *argv[])
     std::cout << "-----------------------------------------\n";
     std::cout << "Counterparty  CVA\n";
     float multiple = 1-params.recovery_rate;
-    for (unsigned int cp=1; cp<total_cva.size(); ++cp){
-        std::cout << cp << " " << multiple*total_cva[cp-1] << "\n";
+    for (unsigned int cp=0; cp<total_cva.size(); ++cp){
+        std::cout << cp+1 << " " << multiple*total_cva[cp] << "\n";
     }
 
 
