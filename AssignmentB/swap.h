@@ -10,8 +10,6 @@ struct Swap{
     float fixed_rate, hazard_rate;
 
     __device__ __host__ Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, int tenor_, int position_, float hazard_rate_); //Constructor
-    //void print();
-    //void print_short();
     __device__ __host__ float value(State &world_state);
 };
 
@@ -27,21 +25,6 @@ Swap::Swap(int swap_id_, char denomination_, int notional_, float fixed_rate_, i
     position = position_;
     hazard_rate = hazard_rate_;
 }
-
-//void Swap::print()
-//{
-//    std::cout << "\nswap_id " << swap_id
-//              << "\ndenomination " << denomination
-//              << "\nnotional " << notional
-//              << "\nfixed_rate " << fixed_rate
-//              << "\ntenor " << tenor
-//              << "\nposition " << position << "\n";
-//}
-//
-//void Swap::print_short()
-//{
-//    std::cout << "    " << swap_id << " " << denomination << " " << notional << " " << fixed_rate << " "  << tenor << " " << position << "\n";
-//}
 
 __device__ __host__
 float Swap::value(State &world_state)

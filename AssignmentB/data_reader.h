@@ -3,6 +3,8 @@
 
 #include <fstream>
 #include <vector>
+#include "fx.h"
+#include "swap.h"
 
 struct Data_reader{
 
