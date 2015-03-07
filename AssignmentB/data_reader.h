@@ -12,8 +12,8 @@ struct Data_reader{
     std::ifstream fx_details_infile, swap_details_infile;
 
     Data_reader();
-    void get_next_data_fx(std::vector<Fx> &fx_vector, Parameters &params);
-    void get_next_data_swap(std::vector<Swap> &swap_vector, Parameters &params);
+    void get_next_data_fx(std::vector<Fx> &fx_vector, int &deals_at_once);
+    void get_next_data_swap(std::vector<Swap> &swap_vector, int &deals_at_once);
     void close_files();
 };
 
@@ -38,7 +38,7 @@ Data_reader::Data_reader()
     }
 }
 
-void Data_reader::get_next_data_fx(std::vector<Fx> &fx_vector, Parameters &params)
+void Data_reader::get_next_data_fx(std::vector<Fx> &fx_vector, int &deals_at_once)
 {
     // Read deals into memory
     int deals_handled=0;
@@ -49,7 +49,7 @@ void Data_reader::get_next_data_fx(std::vector<Fx> &fx_vector, Parameters &param
 
     fx_details_infile.seekg(fx_start_location,fx_details_infile.beg);
 
-    while (deals_handled < params.deals_at_once){
+    while (deals_handled < deals_at_once){
         fx_details_infile >> fx_id;
         fx_details_infile >> notional;
         fx_details_infile >> position;
@@ -60,12 +60,10 @@ void Data_reader::get_next_data_fx(std::vector<Fx> &fx_vector, Parameters &param
     fx_start_location = fx_details_infile.tellg();
 }
 
-void Data_reader::get_next_data_swap(std::vector<Swap> &swap_vector, Parameters &params)
+void Data_reader::get_next_data_swap(std::vector<Swap> &swap_vector, int &deals_at_once)
 {
     // Read deals into memory
     int deals_handled=0;
-    //clock_t program_start_time, end_time;
-    //program_start_time = clock();
 
     int swap_id, notional, tenor;
     char position, denomination;
@@ -74,7 +72,7 @@ void Data_reader::get_next_data_swap(std::vector<Swap> &swap_vector, Parameters 
 
     swap_details_infile.seekg(swap_start_location,swap_details_infile.beg);
 
-    while (deals_handled < params.deals_at_once){
+    while (deals_handled < deals_at_once){
         swap_details_infile >> swap_id;
         swap_details_infile >> denomination;
         swap_details_infile >> notional;

@@ -7,7 +7,7 @@
 struct Parameters{
 
     float eur_usd_rate, cva_disc_rate;
-    int counterparty_num, fx_num, swap_num, deals_at_once, days_in_year, simulation_num;
+    int counterparty_num, fx_num, swap_num, days_in_year, simulation_num;
     float time_horizon, step_size, recovery_rate, eur_usd_vol, amer_alphas[4], amer_sigmas[4], euro_alphas[4], euro_sigmas[4];
     float amer_betas[4], euro_betas[4];
 
@@ -48,7 +48,6 @@ Parameters::Parameters(const char* parameters_filename, const char* state0_filen
     for (int i=0; i<4; ++i) euro_betas[i] = atof(get_param(parameters_infile));
     for (int i=0; i<4; ++i) euro_alphas[i] = atof(get_param(parameters_infile));
     for (int i=0; i<4; ++i) euro_sigmas[i] = atof(get_param(parameters_infile));
-    deals_at_once = atoi(get_param(parameters_infile));
     days_in_year = atoi(get_param(parameters_infile));
     cva_disc_rate = atof(get_param(parameters_infile));
     simulation_num = atoi(get_param(parameters_infile));
@@ -83,8 +82,7 @@ void Parameters::print()
     for (int i=0; i<4; ++i) std::cout << "\nEuro beta" << i << ": " << euro_betas[i];
     for (int i=0; i<4; ++i) std::cout << "\nEuro alpha" << i << ": " << euro_alphas[i];
     for (int i=0; i<4; ++i) std::cout << "\nEuro sigma" << i << ": " << euro_sigmas[i];
-    std::cout << "\nDeals handled at once: " << deals_at_once
-              << "\nDays in a year: " << days_in_year
+    std::cout << "\nDays in a year: " << days_in_year
               << "\nCVA discount rate: " << cva_disc_rate
               << "\nNumber of Simulations: " << simulation_num << "\n\n";
 }

@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
         deals_at_once = dprop.totalGlobalMem/100;
     }
 
-    std::cout << "deals_at_once " << deals_at_once << "\n";
     deals_at_once = min(deals_at_once, params.fx_num);
+    if (params.fx_num % deals_at_once != 0) deals_at_once = (params.fx_num/deals_at_once) - (params.fx_num%deals_at_once); //Mkae sure it divides evenly;
     std::cout << "deals_at_once " << deals_at_once << "\n";
     int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    int R = params.deals_at_once; // number of rows
+    int R = deals_at_once; // number of rows
     int C = num_gpus; // number of columns
     // initialize data
     typedef thrust::device_vector<Fx> dvec;
@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
     std::vector<p_cva_vec> cva_vectors_std;
     for(unsigned int i = 0; i < num_gpus; i++) {
         cudaSetDevice(i);
-        p_dvec temp = new dvec(params.deals_at_once);
+        p_dvec temp = new dvec(deals_at_once);
         dvecs.push_back(temp);
-        p_cva_vec temp2 = new cva_vector(params.deals_at_once);
+        p_cva_vec temp2 = new cva_vector(deals_at_once);
         cva_vectors_std.push_back(temp2);
     }
 
@@ -85,10 +85,10 @@ int main(int argc, char *argv[])
     Data_reader data;
     std::vector<Fx> fx_vector_temp;
     thrust::host_vector<float> cva_vector_host(params.fx_num);
-    for (int k=0; k<params.fx_num/params.deals_at_once; ++k){
+    for (int k=0; k<params.fx_num/deals_at_once; ++k){
         // Get fx deal data
         fx_vector_temp.clear();
-        data.get_next_data_fx(fx_vector_temp, params);
+        data.get_next_data_fx(fx_vector_temp, deals_at_once);
         for (unsigned int i = 0; i < num_gpus; i++) {
             cudaSetDevice(i);
             thrust::copy(fx_vector_temp.begin(), fx_vector_temp.end(), (*(dvecs[i])).begin());
@@ -126,11 +126,11 @@ int main(int argc, char *argv[])
             thrust::equal_to<int>(),
             thrust::plus<int>());
 
-        thrust::device_vector<int> divisor(params.deals_at_once);
-        thrust::device_vector<int> cva_average(params.deals_at_once);
+        thrust::device_vector<int> divisor(deals_at_once);
+        thrust::device_vector<int> cva_average(deals_at_once);
         thrust::fill(divisor.begin(), divisor.end(), num_gpus);
         thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
-        thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*params.deals_at_once);
+        thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
 
     }
 
@@ -165,16 +165,16 @@ int main(int argc, char *argv[])
     std::vector<p_dvec_swap> dvecs_swap;
     for(unsigned int i = 0; i < num_gpus; i++) {
         cudaSetDevice(i);
-        p_dvec_swap temp = new dvec_swap(params.deals_at_once);
+        p_dvec_swap temp = new dvec_swap(deals_at_once);
         dvecs_swap.push_back(temp);
     }
 
     std::vector<Swap> swap_vector_temp;
     thrust::fill(cva_vector_host.begin(), cva_vector_host.end(), 0);
-    for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
+    for (int k=0; k<params.swap_num/deals_at_once; ++k){
         // Get swap deal data
         swap_vector_temp.clear();
-        data.get_next_data_swap(swap_vector_temp, params);
+        data.get_next_data_swap(swap_vector_temp, deals_at_once);
 
         for (unsigned int i = 0; i < num_gpus; i++) {
             cudaSetDevice(i);
@@ -213,11 +213,11 @@ int main(int argc, char *argv[])
             thrust::equal_to<int>(),
             thrust::plus<int>());
 
-        thrust::device_vector<int> divisor(params.deals_at_once);
-        thrust::device_vector<int> cva_average(params.deals_at_once);
+        thrust::device_vector<int> divisor(deals_at_once);
+        thrust::device_vector<int> cva_average(deals_at_once);
         thrust::fill(divisor.begin(), divisor.end(), num_gpus);
         thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
-        thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*params.deals_at_once);
+        thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
 
     // Convert CVA for swaps into CVA for counterparties
