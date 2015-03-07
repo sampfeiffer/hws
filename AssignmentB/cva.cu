@@ -18,16 +18,16 @@
 
 int main(int argc, char *argv[])
 {
-    // Strat timing the program
+    // Start timing the program
     clock_t program_start_time, mid_time, end_time;
     program_start_time = clock();
 
+    void print_results(std::vector<long> &total_cva, float &multiple);
+
     const char* parameters_filename="parameters.txt";
     const char* state0_filename="state0.txt";
-    const char* cva_output_filename="cva_output.txt";
     const char* counterparty_deals_filename="counterparty_deals.dat";
     std::ifstream counterparty_deals_infile;
-    std::ofstream cva_output_outfile;
     int cp_id=1, cp_id_read, deal_id_read, deals_at_once, num_gpus=0, R, C;
     float cva_temp=0;
 
@@ -41,12 +41,13 @@ int main(int argc, char *argv[])
     std::vector<p_dvec_fx> dvecs_fx;
     std::vector<p_dvec_swap> dvecs_swap;
     std::vector<p_cva_vec> cva_vectors_std;
-    std::vector<float> total_cva;
+    std::vector<long> total_cva;
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename, state0_filename);
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
     int total_deals = params.fx_num + params.swap_num;
+    float multiple = 1-params.recovery_rate;
 
     // Determine the number of CUDA capable GPUs.
     cudaGetDeviceCount(&num_gpus);
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
     {
         cudaDeviceProp dprop;
         cudaGetDeviceProperties(&dprop, i);
-        printf("   %d: %s. Memory available: %dMB\n", i+1, dprop.name, dprop.totalGlobalMem / (1024 * 1024));
+        printf("   %d: %s. Memory available: %dMB\n", i+1, dprop.name, int(dprop.totalGlobalMem / (1024 * 1024)));
         deals_at_once = dprop.totalGlobalMem/100;
     }
 
@@ -80,7 +81,7 @@ int main(int argc, char *argv[])
 
     R = deals_at_once; // number of rows
     C = num_gpus; // number of columns
-    // initialize data
+    // initialize data on each GPU
     for(unsigned int i = 0; i < num_gpus; i++) {
         cudaSetDevice(i);
         p_dvec_fx temp = new dvec(deals_at_once);
@@ -90,12 +91,16 @@ int main(int argc, char *argv[])
     }
 
     std::cout << "-----------------------------------------\n";
+
+    //----------------------------------------------------------------------------------------------------
+    // FX
+
     std::cout << "Starting FX deals\n";
     Data_reader data;
     std::vector<Fx> fx_vector_temp;
     thrust::host_vector<float> cva_vector_host(params.fx_num);
     for (int k=0; k<params.fx_num/deals_at_once; ++k){
-        // Get fx deal data
+        // Get fx deal data and copy onto each GPU
         fx_vector_temp.clear();
         data.get_next_data_fx(fx_vector_temp, deals_at_once);
         for (unsigned int i = 0; i < num_gpus; i++) {
@@ -104,6 +109,7 @@ int main(int argc, char *argv[])
         }
 
         // run as many CPU threads as there are CUDA devices
+        // Calculate CVA on each GPU
         omp_set_num_threads(num_gpus);
         #pragma omp parallel
         {
@@ -140,11 +146,9 @@ int main(int argc, char *argv[])
         thrust::fill(divisor.begin(), divisor.end(), num_gpus);
         thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
-
     }
 
     // Convert CVA for FX deals into CVA for counterparties
-
     counterparty_deals_infile >> cp_id_read;
     for (int i=0; i<total_deals; ++i){
         counterparty_deals_infile >> deal_id_read;
@@ -162,9 +166,13 @@ int main(int argc, char *argv[])
     mid_time = clock();
     std::cout << "Finished FX deals\n";
     std::cout << "Timing: FX CVA " << float(mid_time-program_start_time)/CLOCKS_PER_SEC << " seconds.\n";
+
+    //----------------------------------------------------------------------------------------------------
+    // SWAPS
+
     std::cout << "Starting Swap deals\n";
 
-    // initialize data
+    // initialize data on each GPU
     for(unsigned int i = 0; i < num_gpus; i++) {
         cudaSetDevice(i);
         p_dvec_swap temp = new dvec_swap(deals_at_once);
@@ -174,16 +182,16 @@ int main(int argc, char *argv[])
     std::vector<Swap> swap_vector_temp;
     thrust::fill(cva_vector_host.begin(), cva_vector_host.end(), 0);
     for (int k=0; k<params.swap_num/deals_at_once; ++k){
-        // Get swap deal data
+        // Get swap deal data and copy onto each GPU
         swap_vector_temp.clear();
         data.get_next_data_swap(swap_vector_temp, deals_at_once);
-
         for (unsigned int i = 0; i < num_gpus; i++) {
             cudaSetDevice(i);
             thrust::copy(swap_vector_temp.begin(), swap_vector_temp.end(), (*(dvecs_swap[i])).begin());
         }
 
         // run as many CPU threads as there are CUDA devices
+        // Calculate CVA on each GPU
         omp_set_num_threads(num_gpus);
         #pragma omp parallel
         {
@@ -193,7 +201,7 @@ int main(int argc, char *argv[])
             cudaDeviceSynchronize();
         }
 
-        // initialize data
+        // Find the average of the cva calculations over the different GPUs
         thrust::device_vector<int> cva_sum(R * C);
         for (size_t j=0; j<C; j++){
             for (size_t i=0; i<R; i++){
@@ -241,18 +249,32 @@ int main(int argc, char *argv[])
         }
     }
 
+    data.close_files();
+    counterparty_deals_infile.close();
     end_time = clock();
     std::cout << "Finished Swap deals\n";
     std::cout << "Timing: Swap CVA " << float(end_time-mid_time)/CLOCKS_PER_SEC << " seconds.\n";
 
-    // Print results
+    // Results
+    print_results(total_cva, multiple);
+
+    end_time = clock() - program_start_time;
+    std::cout << "Timing: Whole program " << float(end_time)/CLOCKS_PER_SEC << " seconds.\n";
+    std::cout << "\n";
+    return 0;
+}
+
+// Print results
+void print_results(std::vector<long> &total_cva, float &multiple)
+{
+    const char* cva_output_filename="cva_output.txt";
+    std::ofstream cva_output_outfile;
     cva_output_outfile.open(cva_output_filename);
     if (!cva_output_outfile.is_open()){
         std::cout << "ERROR: cva_output.txt file could not be opened. Exiting.\n";
         exit(1);
     }
     cva_output_outfile << "Counterparty  CVA\n";
-    float multiple = 1-params.recovery_rate;
     for (unsigned int cp=0; cp<total_cva.size(); ++cp){
         cva_output_outfile << cp+1 << " " << multiple*total_cva[cp] << "\n";
     }
@@ -261,13 +283,5 @@ int main(int argc, char *argv[])
 
     std::cout << "-----------------------------------------\n";
     std::cout << "\nGrand Total Bank CVA " << multiple*std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
-
-    data.close_files();
-    counterparty_deals_infile.close();
-
-    end_time = clock() - program_start_time;
-    std::cout << "Timing: whole program " << float(end_time)/CLOCKS_PER_SEC << " seconds.\n";
-    std::cout << "\n";
-    return 0;
 }
 
