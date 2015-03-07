@@ -11,12 +11,13 @@ struct Data_reader{
     int fx_start_location, swap_start_location;
     std::ifstream fx_details_infile, swap_details_infile;
 
-    Data_reader();
+    Data_reader(); // Constructor
     void get_next_data_fx(std::vector<Fx> &fx_vector, int &deals_at_once);
     void get_next_data_swap(std::vector<Swap> &swap_vector, int &deals_at_once);
     void close_files();
 };
 
+// Constructor
 Data_reader::Data_reader()
 {
     fx_start_location = 0;
@@ -38,9 +39,9 @@ Data_reader::Data_reader()
     }
 }
 
+// Read FX deals into memory
 void Data_reader::get_next_data_fx(std::vector<Fx> &fx_vector, int &deals_at_once)
 {
-    // Read deals into memory
     int deals_handled=0;
 
     int fx_id, notional;
@@ -60,9 +61,9 @@ void Data_reader::get_next_data_fx(std::vector<Fx> &fx_vector, int &deals_at_onc
     fx_start_location = fx_details_infile.tellg();
 }
 
+// Read swaps into memory
 void Data_reader::get_next_data_swap(std::vector<Swap> &swap_vector, int &deals_at_once)
 {
-    // Read deals into memory
     int deals_handled=0;
 
     int swap_id, notional, tenor;
