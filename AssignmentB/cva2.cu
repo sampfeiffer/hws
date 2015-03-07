@@ -79,24 +79,33 @@ int main(int argc, char *argv[])
         thrust::transform(fx_vector.begin(), fx_vector.end(), cva_vector.begin(), calculate_cva_fx(params, num_of_steps));
         thrust::host_vector<float> cva_vector_host(cva_vector);
 
-        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
-            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << fx_vector_temp[i].fx_id << "\n";
-        }
+//        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
+//            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << fx_vector_temp[i].fx_id << "\n";
+//        }
     }
+
+    end_time = clock() - program_start_time;
+    std::cout << "Timing1 " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
 
     std::vector<Swap> swap_vector_temp;
     for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
         // Get swap deal data
         swap_vector_temp.clear();
         data.get_next_data_swap(swap_vector_temp, params);
+        end_time = clock() - program_start_time;
+        std::cout << "Timing2 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         thrust::device_vector<Swap> swap_vector(swap_vector_temp.begin(), swap_vector_temp.end());
         thrust::device_vector<float> cva_vector(swap_vector.size());
+        end_time = clock() - program_start_time;
+        std::cout << "Timing3 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         thrust::transform(swap_vector.begin(), swap_vector.end(), cva_vector.begin(), calculate_cva_swap(params, num_of_steps));
+        end_time = clock() - program_start_time;
+        std::cout << "Timing4 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         thrust::host_vector<float> cva_vector_host(cva_vector);
 
-        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
-            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << swap_vector_temp[i].swap_id << "\n";
-        }
+//        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
+//            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << swap_vector_temp[i].swap_id << "\n";
+//        }
     }
 
     //multiply by recovery
