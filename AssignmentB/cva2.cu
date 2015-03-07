@@ -115,6 +115,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    std::cout << "cva " << std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
+
 
     std::vector<Swap> swap_vector_temp;
     for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
