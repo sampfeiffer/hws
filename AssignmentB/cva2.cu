@@ -94,6 +94,7 @@ int main(int argc, char *argv[])
 //        }
     }
     std::cout << "size " << cva_vector_host.size() << "\n";
+    std::cout << "cva " << thrust::reduce(cva_vector_host.begin(), cva_vector_host.end()) << "\n";
 
     int total_deals = params.fx_num + params.swap_num;
     int cp_id=1, cp_id_read, deal_id_read;
