@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
 
     Data_reader data;
     std::vector<Fx> fx_vector_temp;
+    thrust::host_vector<float> cva_vector_host;
     for (int k=0; k<params.fx_num/params.deals_at_once; ++k){
         // Get fx deal data
         fx_vector_temp.clear();
@@ -76,7 +77,8 @@ int main(int argc, char *argv[])
         thrust::device_vector<Fx> fx_vector(fx_vector_temp.begin(), fx_vector_temp.end());
         thrust::device_vector<float> cva_vector(fx_vector.size());
         thrust::transform(fx_vector.begin(), fx_vector.end(), cva_vector.begin(), calculate_cva_fx(params, num_of_steps));
-        thrust::host_vector<float> cva_vector_host(cva_vector);
+        cva_vector_host.clear();
+        cva_vector_host(cva_vector);
 
 //        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
 //            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << fx_vector_temp[i].fx_id << "\n";
@@ -92,6 +94,7 @@ int main(int argc, char *argv[])
         std::cout << "Timing1 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         // Get swap deal data
         swap_vector_temp.clear();
+        cva_vector_host.clear();
         end_time = clock() - program_start_time;
         std::cout << "Timing2 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
         data.get_next_data_swap(swap_vector_temp, params);
@@ -106,7 +109,8 @@ int main(int argc, char *argv[])
         thrust::transform(swap_vector.begin(), swap_vector.end(), cva_vector.begin(), calculate_cva_swap(params, num_of_steps));
         end_time = clock() - program_start_time;
         std::cout << "Timing6 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
-        thrust::host_vector<float> cva_vector_host(cva_vector);
+        cva_vector_host.clear();
+        cva_vector_host(cva_vector);
         end_time = clock() - program_start_time;
         std::cout << "Timing7 " << k << " " << float(end_time)/CLOCKS_PER_SEC << " seconds since start.\n";
 
