@@ -62,6 +62,7 @@ void Data_reader::get_next_data(std::vector<Fx> &fx_vector, Parameters &params)
         fx_details_infile >> notional;
         fx_details_infile >> position;
         fx_vector.push_back(Fx(fx_id, notional, position));
+        ++deals_handled;
     }
     fx_start_location = fx_details_infile.tellg();
 
