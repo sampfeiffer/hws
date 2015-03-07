@@ -66,6 +66,15 @@ int main(int argc, char *argv[])
     Parameters params(parameters_filename, state0_filename);
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
 
+    const char* counterparty_deals_filename="counterparty_deals.dat";
+    std::ifstream counterparty_deals_infile;
+    counterparty_deals_infile.open(counterparty_deals_filename);
+    if (!counterparty_deals_infile.is_open()){
+        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
+        exit(1);
+    }
+
+
 
     Data_reader data;
     std::vector<Fx> fx_vector_temp;
@@ -84,6 +93,32 @@ int main(int argc, char *argv[])
 //        }
     }
     std::cout << "size " << cva_vector_host.size() << "\n";
+
+    int total_deals = params.fx_num + params.swap_num;
+    int cp_id=1, cp_id_read, deal_id_read;
+    float cva_temp=0;
+    std::vector<float> total_cva;
+
+    counterparty_deals_infile >> cp_id_read;
+    for (int i=0; i<total_deals; ++i){
+        counterparty_deals_infile >> deal_id_read;
+        if (deal_id_read < params.fx_num){
+            cva_temp += cva_vector_host[deal_id_read-1];
+        }
+        counterparty_deals_infile >> cp_id_read;
+        if (cp_id_read > cp_id){
+            total_cva.push_back(cva_temp);
+            cva_temp = 0;
+            ++cp_id;
+        }
+    }
+
+    for (unsigned int i=0; i<50; ++i){
+        std::cout << "cva deals " << i << " " << cva_vector_host[i] << "\n";
+    }
+    for (unsigned int i=0; i<50; ++i){
+        std::cout << "cva cps " << i << " " << total_cva[i] << "\n";
+    }
 
     std::vector<Swap> swap_vector_temp;
     for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
@@ -107,32 +142,7 @@ int main(int argc, char *argv[])
 
     data.close_files();
 
-//    const char* counterparty_deals_filename="counterparty_deals.dat";
-//    std::ifstream counterparty_deals_infile;
-//    counterparty_deals_infile.open(counterparty_deals_filename);
-//    if (!counterparty_deals_infile.is_open()){
-//        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
-//        exit(1);
-//    }
-//
-//    int total_deals = params.fx_num + params.swap_num;
-//    int cp_id=1, cp_id_read, deal_id_read;
-//    float cva_temp;
-//    std::vector<float> total_cva;
-//
-//    for (int i=0; i<total_deals; ++i){
-//        counterparty_deals_infile >> cp_id_read;
-//        do{
-//            counterparty_deals_infile >> deal_id_read;
-//            if (deal_id_read < params.fx_num){
-//
-//            }
-//
-//        } while(cp_id_read == cp_id);
-//    }
-//
-//
-//    counterparty_deals_infile.close();
+    counterparty_deals_infile.close();
 
     end_time = clock() - program_start_time;
     std::cout << "Timing: whole program " << float(end_time)/CLOCKS_PER_SEC << " seconds.\n";
