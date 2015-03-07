@@ -74,6 +74,8 @@ void Data_reader::get_next_data_swap(std::vector<Swap> &swap_vector, Parameters 
 {
     // Read deals into memory
     int deals_handled=0;
+    //clock_t program_start_time, end_time;
+    //program_start_time = clock();
 
     int swap_id, notional, tenor;
     char position, denomination;
