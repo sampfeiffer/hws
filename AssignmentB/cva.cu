@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     {
         cudaDeviceProp dprop;
         cudaGetDeviceProperties(&dprop, i);
-        printf("   %d: %s\n", i, dprop.name);
+        printf("   %d: %s. Memory available: %d\n", i, dprop.name, dprop.totalGlobalMem / (1024. * 1024.));
     }
 
     int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
