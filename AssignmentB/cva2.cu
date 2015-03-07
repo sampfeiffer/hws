@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
 
     Data_reader data;
     std::vector<Fx> fx_vector_temp;
+    thrust::host_vector<float> cva_vector_host(params.fx_num);
     for (int k=0; k<params.fx_num/params.deals_at_once; ++k){
         // Get fx deal data
         fx_vector_temp.clear();
@@ -76,43 +77,59 @@ int main(int argc, char *argv[])
         thrust::device_vector<Fx> fx_vector(fx_vector_temp.begin(), fx_vector_temp.end());
         thrust::device_vector<float> cva_vector(fx_vector.size());
         thrust::transform(fx_vector.begin(), fx_vector.end(), cva_vector.begin(), calculate_cva_fx(params, num_of_steps));
-        thrust::host_vector<float> cva_vector_host(cva_vector);
+        thrust::copy(cva_vector.begin(), cva_vector.end(), cva_vector_host.begin()+k*params.deals_at_once);
 
 //        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
 //            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << fx_vector_temp[i].fx_id << "\n";
 //        }
     }
+    std::cout << "size " << cva_vector_host.size() << "\n";
 
-    std::vector<Swap> swap_vector_temp;
-    for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
-        // Get swap deal data
-        swap_vector_temp.clear();
-        data.get_next_data_swap(swap_vector_temp, params);
-        thrust::device_vector<Swap> swap_vector(swap_vector_temp.begin(), swap_vector_temp.end());
-        thrust::device_vector<float> cva_vector(swap_vector.size());
-        thrust::transform(swap_vector.begin(), swap_vector.end(), cva_vector.begin(), calculate_cva_swap(params, num_of_steps));
-        thrust::host_vector<float> cva_vector_host(cva_vector);
-
-//        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
-//            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << swap_vector_temp[i].swap_id << "\n";
-//        }
-    }
+//    std::vector<Swap> swap_vector_temp;
+//    for (int k=0; k<params.swap_num/params.deals_at_once; ++k){
+//        // Get swap deal data
+//        swap_vector_temp.clear();
+//        data.get_next_data_swap(swap_vector_temp, params);
+//        thrust::device_vector<Swap> swap_vector(swap_vector_temp.begin(), swap_vector_temp.end());
+//        thrust::device_vector<float> cva_vector(swap_vector.size());
+//        thrust::transform(swap_vector.begin(), swap_vector.end(), cva_vector.begin(), calculate_cva_swap(params, num_of_steps));
+//        thrust::host_vector<float> cva_vector_host(cva_vector);
+//
+////        for (unsigned int i=0; i<cva_vector_host.size(); ++i){
+////            std::cout << "cva " << k*params.deals_at_once+i+1 << " " << cva_vector_host[i] << " " << swap_vector_temp[i].swap_id << "\n";
+////        }
+//    }
 
     //multiply by recovery
 
     data.close_files();
 
-    const char* counterparty_deals_filename="counterparty_deals.dat";
-    std::ifstream counterparty_deals_infile;
-    counterparty_deals_infile.open(counterparty_deals_filename);
-    if (!counterparty_deals_infile.is_open()){
-        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
-
-
-
-    counterparty_deals_infile.close();
+//    const char* counterparty_deals_filename="counterparty_deals.dat";
+//    std::ifstream counterparty_deals_infile;
+//    counterparty_deals_infile.open(counterparty_deals_filename);
+//    if (!counterparty_deals_infile.is_open()){
+//        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
+//        exit(1);
+//    }
+//
+//    int total_deals = params.fx_num + params.swap_num;
+//    int cp_id=1, cp_id_read, deal_id_read;
+//    float cva_temp;
+//    std::vector<float> total_cva;
+//
+//    for (int i=0; i<total_deals; ++i){
+//        counterparty_deals_infile >> cp_id_read;
+//        do{
+//            counterparty_deals_infile >> deal_id_read;
+//            if (deal_id_read < params.fx_num){
+//
+//            }
+//
+//        } while(cp_id_read == cp_id);
+//    }
+//
+//
+//    counterparty_deals_infile.close();
 
     end_time = clock() - program_start_time;
     std::cout << "Timing: whole program " << float(end_time)/CLOCKS_PER_SEC << " seconds.\n";
