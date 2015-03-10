@@ -23,7 +23,6 @@ struct calculate_cva_fx{
     int num_of_steps, paths_per_gpu;
     State* path_ptr;
 
-
     calculate_cva_fx(Parameters params_, int num_of_steps_, int paths_per_gpu_, State* path_ptr_) : params(params_), num_of_steps(num_of_steps_), paths_per_gpu(paths_per_gpu_), path_ptr(path_ptr_)
     {}
     __device__ __host__
@@ -34,8 +33,9 @@ struct calculate_cva_fx{
         for (int path=0; path<paths_per_gpu; ++path){
             cva=0;
             for (int i=0; i<num_of_steps; ++i){
-                prob_default = std::exp(-fx.hazard_rate*(path_ptr[path*num_of_steps+i].time-1)/float(360.0)) - std::exp(-fx.hazard_rate*path_ptr[path*num_of_steps+i].time/float(360.0));
-                cva += path_ptr[path*num_of_steps+i].cva_disc_factor * prob_default * max(fx.value(path_ptr[path*num_of_steps+i].fx_rate),float(0.0));
+                world_state = path_ptr[path*num_of_steps+i];
+                prob_default = std::exp(-fx.hazard_rate*(world_state.time-1)/float(360.0)) - std::exp(-fx.hazard_rate*world_state.time/float(360.0));
+                cva += world_state.cva_disc_factor * prob_default * max(fx.value(world_state.fx_rate),float(0.0));
             }
             sum += cva;
         }

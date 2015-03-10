@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
-            thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(params, num_of_steps, simulations_per_gpu, path_ptr));
+            thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(params, num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
 
