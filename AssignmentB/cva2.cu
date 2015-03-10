@@ -14,7 +14,7 @@
 #include "parameters.h"
 #include "data_reader.h"
 #include "state.h"
-#include "functors.h"
+#include "functors2.h"
 
 int main(int argc, char *argv[])
 {
@@ -70,9 +70,10 @@ int main(int argc, char *argv[])
     }
 
     thrust::device_vector<State> dpaths = hpaths;
-    State* path_ptr = thrust::raw_pointer_cast(&dpaths[0]);
+    //State* path_ptr = thrust::raw_pointer_cast(&dpaths[0]);
+    State* path_ptr = thrust::raw_pointer_cast(dpaths.data());
 
-    std::cout << "time test " << path_ptr[0].time << "\n";
+    //std::cout << "time test " << path_ptr[0].time << "\n";
 
     R = deals_at_once; // number of rows
     C = num_gpus; // number of columns
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
-            thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(params, num_of_steps, simulations_per_gpu));
+            thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(params, num_of_steps, simulations_per_gpu, path_ptr));
             cudaDeviceSynchronize();
         }
 
