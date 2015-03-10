@@ -1,3 +1,7 @@
+//seed
+//code cleaning
+//timing for different parts
+
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/reduce.h>
@@ -14,7 +18,7 @@
 #include "parameters.h"
 #include "data_reader.h"
 #include "state.h"
-#include "functors.h"
+#include "functors2.h"
 
 int main(int argc, char *argv[])
 {
@@ -60,6 +64,21 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    thrust::host_vector<State> hpaths;
+    for (int sim=0; sim<params.simulation_num; ++sim){
+        State world_state(params);
+        for (int i=0; i<num_of_steps; ++i){
+            world_state.sim_next_step();
+            hpaths.push_back(world_state);
+        }
+    }
+
+    thrust::device_vector<State> dpaths = hpaths;
+    //State* path_ptr = thrust::raw_pointer_cast(&dpaths[0]);
+    State* path_ptr = thrust::raw_pointer_cast(dpaths.data());
+
+    //std::cout << "time test " << path_ptr[0].time << "\n";
+
     R = deals_at_once; // number of rows
     C = num_gpus; // number of columns
     // initialize data on each GPU
@@ -96,7 +115,7 @@ int main(int argc, char *argv[])
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
-            thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(params, num_of_steps, simulations_per_gpu));
+            thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
 
@@ -178,7 +197,7 @@ int main(int argc, char *argv[])
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
-            thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_swap(params, num_of_steps, simulations_per_gpu));
+            thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_swap(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
 
