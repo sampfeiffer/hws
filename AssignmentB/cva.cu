@@ -1,6 +1,7 @@
 //seed
 //code cleaning
 //timing for different parts
+//change to pass by reference
 
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -12,7 +13,6 @@
 
 #include <vector>
 #include <numeric>
-//#include <sys/time.h>
 #include <time.h>
 
 #include "parameters.h"
@@ -41,15 +41,8 @@ int main(int argc, char *argv[])
     const char* state0_filename="state0.txt";
     const char* counterparty_deals_filename="counterparty_deals.dat";
     std::ifstream counterparty_deals_infile;
-    int cp_id=1, cp_id_read, deal_id_read, deals_at_once, num_gpus=0, R, C;
+    int cp_id=1, cp_id_read, deal_id_read, deals_at_once, num_gpus=0;
     float cva_temp=0;
-
-//    typedef thrust::device_vector<Fx> dvec_fx;
-//    typedef dvec_fx *p_dvec_fx;
-//    typedef thrust::device_vector<Swap> dvec_swap;
-//    typedef dvec_swap *p_dvec_swap;
-//    typedef thrust::device_vector<float> cva_vector;
-//    typedef cva_vector *p_cva_vec;
 
     std::vector<p_dvec_fx> dvecs_fx;
     std::vector<p_dvec_swap> dvecs_swap;
@@ -76,13 +69,8 @@ int main(int argc, char *argv[])
     }
 
     thrust::device_vector<State> dpaths = hpaths;
-    //State* path_ptr = thrust::raw_pointer_cast(&dpaths[0]);
     State* path_ptr = thrust::raw_pointer_cast(dpaths.data());
 
-    //std::cout << "time test " << path_ptr[0].time << "\n";
-
-    R = deals_at_once; // number of rows
-    C = num_gpus; // number of columns
     // initialize data on each GPU
     for(unsigned int i = 0; i < num_gpus; i++) {
         cudaSetDevice(i);
@@ -184,34 +172,7 @@ int main(int argc, char *argv[])
             thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_swap(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
-//
-//        // Find the average of the cva calculations over the different GPUs
-//        thrust::device_vector<int> cva_sum(R * C);
-//        for (size_t j=0; j<C; j++){
-//            for (size_t i=0; i<R; i++){
-//                cva_sum[i*num_gpus+j] = (*(cva_vectors_std[j]))[i];
-//            }
-//        }
-//
-//        // allocate storage for row sums and indices
-//        thrust::device_vector<int> row_sums(R);
-//        thrust::device_vector<int> row_indices(R);
-//
-//        // compute row sums by summing values with equal row indices
-//        thrust::reduce_by_key
-//            (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
-//            thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
-//            cva_sum.begin(),
-//            row_indices.begin(),
-//            row_sums.begin(),
-//            thrust::equal_to<int>(),
-//            thrust::plus<int>());
-//
-//        thrust::device_vector<int> divisor(deals_at_once);
-//        thrust::device_vector<int> cva_average(deals_at_once);
-//        thrust::fill(divisor.begin(), divisor.end(), num_gpus);
-//        thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
-//
+
         // Find the average of the cva calculations over the different GPUs
         thrust::device_vector<int> cva_average = cva_average_over_gpu(cva_vectors_std, deals_at_once, num_gpus);
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
