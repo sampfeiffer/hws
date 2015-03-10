@@ -36,24 +36,23 @@ int main(int argc, char *argv[])
     void print_results(std::vector<long> &total_cva, float &multiple);
     int gpu_info(int &num_gpus, Parameters &params);
     thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vectors_std, int R, int C);
+    void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector<float> &cva_vector_host, Parameters &params, const char* counterparty_deals_filename, bool is_fx);
 
     const char* parameters_filename="parameters.txt";
     const char* state0_filename="state0.txt";
     const char* counterparty_deals_filename="counterparty_deals.dat";
-    std::ifstream counterparty_deals_infile;
-    int cp_id=1, cp_id_read, deal_id_read, deals_at_once, num_gpus=0;
-    float cva_temp=0;
+    int deals_at_once, num_gpus=0;
 
     std::vector<p_dvec_fx> dvecs_fx;
     std::vector<p_dvec_swap> dvecs_swap;
     std::vector<p_cva_vec> cva_vectors_std;
-    std::vector<long> total_cva;
+
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename, state0_filename);
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
-    int total_deals = params.fx_num + params.swap_num;
     float multiple = 1-params.recovery_rate;
+    std::vector<long> total_cva(params.counterparty_num, 0);
 
     // Determine the number of CUDA capable GPUs. Calculate the number of deals to handle at a time.
     deals_at_once = gpu_info(num_gpus, params);
@@ -115,25 +114,31 @@ int main(int argc, char *argv[])
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
 
-    counterparty_deals_infile.open(counterparty_deals_filename);
-    if (!counterparty_deals_infile.is_open()){
-        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
-    // Convert CVA for FX deals into CVA for counterparties
-    counterparty_deals_infile >> cp_id_read;
-    for (int i=0; i<total_deals; ++i){
-        counterparty_deals_infile >> deal_id_read;
-        if (deal_id_read <= params.fx_num){
-            cva_temp += cva_vector_host[deal_id_read-1];
-        }
-        counterparty_deals_infile >> cp_id_read;
-        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
-            total_cva.push_back(cva_temp);
-            cva_temp = 0;
-            ++cp_id;
-        }
-    }
+//    counterparty_deals_infile.open(counterparty_deals_filename);
+//    if (!counterparty_deals_infile.is_open()){
+//        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
+//        exit(1);
+//    }
+//
+//    int cp_id=1, cp_id_read, deal_id_read;
+//    int total_deals = params.fx_num + params.swap_num;
+//    float cva_temp=0;
+//    std::vector<long> total_cva;
+//    // Convert CVA for FX deals into CVA for counterparties
+//    counterparty_deals_infile >> cp_id_read;
+//    for (int i=0; i<total_deals; ++i){
+//        counterparty_deals_infile >> deal_id_read;
+//        if (deal_id_read <= params.fx_num){
+//            cva_temp += cva_vector_host[deal_id_read-1];
+//        }
+//        counterparty_deals_infile >> cp_id_read;
+//        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
+//            total_cva.push_back(cva_temp);
+//            cva_temp = 0;
+//            ++cp_id;
+//        }
+//    }
+    convert_to_counterparties(total_cva, cva_vector_host, params, counterparty_deals_filename, true);
 
     mid_time = clock();
     std::cout << "Finished FX deals\n";
@@ -178,27 +183,28 @@ int main(int argc, char *argv[])
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
 
-    // Convert CVA for swaps into CVA for counterparties
-    cp_id=1;
-    cva_temp=0;
-    counterparty_deals_infile.clear(); //gets rid of eof flag
-    counterparty_deals_infile.seekg(0, counterparty_deals_infile.beg);
-    counterparty_deals_infile >> cp_id_read;
-    for (int i=0; i<total_deals; ++i){
-        counterparty_deals_infile >> deal_id_read;
-        if (deal_id_read > params.fx_num){
-            cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
-        }
-        counterparty_deals_infile >> cp_id_read;
-        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
-            total_cva[cp_id-1] += cva_temp;
-            cva_temp = 0;
-            ++cp_id;
-        }
-    }
+//    // Convert CVA for swaps into CVA for counterparties
+//    cp_id=1;
+//    cva_temp=0;
+//    counterparty_deals_infile.clear(); //gets rid of eof flag
+//    counterparty_deals_infile.seekg(0, counterparty_deals_infile.beg);
+//    counterparty_deals_infile >> cp_id_read;
+//    for (int i=0; i<total_deals; ++i){
+//        counterparty_deals_infile >> deal_id_read;
+//        if (deal_id_read > params.fx_num){
+//            cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
+//        }
+//        counterparty_deals_infile >> cp_id_read;
+//        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
+//            total_cva[cp_id-1] += cva_temp;
+//            cva_temp = 0;
+//            ++cp_id;
+//        }
+//    }
+    convert_to_counterparties(total_cva, cva_vector_host, params, counterparty_deals_filename, false);
 
     data.close_files();
-    counterparty_deals_infile.close();
+    //counterparty_deals_infile.close();
     end_time = clock();
     std::cout << "Finished Swap deals\n";
     std::cout << "Timing: Swap CVA " << float(end_time-mid_time)/CLOCKS_PER_SEC << " seconds.\n";
@@ -291,4 +297,42 @@ thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vecto
 
     return cva_average;
 }
+
+// Convert CVA for FX deals into CVA for counterparties
+void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector<float> &cva_vector_host, Parameters &params, const char* counterparty_deals_filename, bool is_fx)
+{
+    int cp_id=1, cp_id_read, deal_id_read;
+    int total_deals = params.fx_num + params.swap_num;
+    float cva_temp=0;
+    std::ifstream counterparty_deals_infile;
+
+    counterparty_deals_infile.open(counterparty_deals_filename);
+    if (!counterparty_deals_infile.is_open()){
+        std::cout << "ERROR: " << counterparty_deals_filename << " file could not be opened. Exiting.\n";
+        exit(1);
+    }
+
+    counterparty_deals_infile >> cp_id_read;
+    for (int i=0; i<total_deals; ++i){
+        counterparty_deals_infile >> deal_id_read;
+        if (is_fx && deal_id_read <= params.fx_num){
+            cva_temp += cva_vector_host[deal_id_read-1];
+        }
+        else if (!is_fx && deal_id_read > params.fx_num){
+            cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
+        }
+        counterparty_deals_infile >> cp_id_read;
+        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
+            //total_cva.push_back(cva_temp);
+            total_cva[cp_id-1] += cva_temp;
+            cva_temp = 0;
+            ++cp_id;
+        }
+    }
+    counterparty_deals_infile.close();
+}
+
+
+
+
 
