@@ -11,6 +11,7 @@ struct NelsonSiegel{
     thrust::minstd_rand generator;
     thrust::random::normal_distribution<float> standard_normal;
 
+    __device__ __host__ NelsonSiegel(){}
     __device__ __host__ NelsonSiegel(float step_size_, float betas_beg_[], float alphas_[], float sigmas_[]);
     __device__ __host__ float yield(float t);
     __device__ __host__ void sim_next_step();

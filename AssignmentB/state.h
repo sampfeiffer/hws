@@ -10,6 +10,7 @@ struct State{
     int time;
     NelsonSiegel amer, euro;
 
+    __device__ __host__ State(){}
     __device__ __host__ State(Parameters &params);
     __device__ __host__ void sim_next_step();
 };

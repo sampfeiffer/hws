@@ -30,6 +30,7 @@ struct calculate_cva_fx{
     float operator()(Fx &fx) {
         float cva, sum=0;
         float prob_default;
+        State world_state;
         for (int path=0; path<paths_per_gpu; ++path){
             cva=0;
             for (int i=0; i<num_of_steps; ++i){
