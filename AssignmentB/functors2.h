@@ -19,11 +19,10 @@ struct linear_index_to_row_index : public thrust::unary_function<T,T>
 
 // Calculate the cva of an FX deal over a specified number of paths.
 struct calculate_cva_fx{
-    Parameters params;
     int num_of_steps, paths_per_gpu;
     State* path_ptr;
 
-    calculate_cva_fx(Parameters params_, int num_of_steps_, int paths_per_gpu_, State* path_ptr_) : params(params_), num_of_steps(num_of_steps_), paths_per_gpu(paths_per_gpu_), path_ptr(path_ptr_)
+    calculate_cva_fx(int num_of_steps_, int paths_per_gpu_, State* path_ptr_) : num_of_steps(num_of_steps_), paths_per_gpu(paths_per_gpu_), path_ptr(path_ptr_)
     {}
     __device__ __host__
     float operator()(Fx &fx) {
