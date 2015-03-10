@@ -355,9 +355,9 @@ thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vecto
 
     //return row_sums;
 
-    thrust::device_vector<int> divisor(C);
-    thrust::device_vector<int> cva_average(C);
-    thrust::fill(divisor.begin(), divisor.end(), R);
+    thrust::device_vector<int> divisor(R);
+    thrust::device_vector<int> cva_average(R);
+    thrust::fill(divisor.begin(), divisor.end(), C);
     thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
 
     return cva_average;
