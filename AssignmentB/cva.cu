@@ -130,23 +130,23 @@ int main(int argc, char *argv[])
 //            }
 //        }
 
-        thrust::device_vector<int> cva_sum = cva_average_over_gpu(cva_vectors_std, R, C);
+        //thrust::device_vector<int> cva_sum = cva_average_over_gpu(cva_vectors_std, R, C);
 
-        // allocate storage for row sums and indices
-        thrust::device_vector<int> row_sums(R);
-        thrust::device_vector<int> row_indices(R);
+//        // allocate storage for row sums and indices
+//        thrust::device_vector<int> row_sums(R);
+//        thrust::device_vector<int> row_indices(R);
+//
+//        // compute row sums by summing values with equal row indices
+//        thrust::reduce_by_key
+//            (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
+//            thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
+//            cva_sum.begin(),
+//            row_indices.begin(),
+//            row_sums.begin(),
+//            thrust::equal_to<int>(),
+//            thrust::plus<int>());
 
-        // compute row sums by summing values with equal row indices
-        thrust::reduce_by_key
-            (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
-            thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
-            cva_sum.begin(),
-            row_indices.begin(),
-            row_sums.begin(),
-            thrust::equal_to<int>(),
-            thrust::plus<int>());
-
-
+        thrust::device_vector<int> row_sums = cva_average_over_gpu(cva_vectors_std, R, C);
 
         thrust::device_vector<int> divisor(deals_at_once);
         thrust::device_vector<int> cva_average(deals_at_once);
@@ -337,21 +337,23 @@ thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vecto
         }
     }
 
-    return cva_sum;
+    //return cva_sum;
 
-//    // allocate storage for row sums and indices
-//    thrust::device_vector<int> row_sums(R);
-//    thrust::device_vector<int> row_indices(R);
-//
-//    // compute row sums by summing values with equal row indices
-//    thrust::reduce_by_key
-//        (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
-//        thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
-//        cva_sum.begin(),
-//        row_indices.begin(),
-//        row_sums.begin(),
-//        thrust::equal_to<int>(),
-//        thrust::plus<int>());
+    // allocate storage for row sums and indices
+    thrust::device_vector<int> row_sums(R);
+    thrust::device_vector<int> row_indices(R);
+
+    // compute row sums by summing values with equal row indices
+    thrust::reduce_by_key
+        (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
+        thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
+        cva_sum.begin(),
+        row_indices.begin(),
+        row_sums.begin(),
+        thrust::equal_to<int>(),
+        thrust::plus<int>());
+
+    return row_sums;
 //
 //    thrust::device_vector<int> divisor(C);
 //    thrust::device_vector<int> cva_average(C);
