@@ -60,20 +60,19 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    thrust::host_vector<State> paths;
+    thrust::host_vector<State> hpaths;
     for (int sim=0; sim<params.simulation_num; ++sim){
         State world_state(params);
         for (int i=0; i<num_of_steps; ++i){
             world_state.sim_next_step();
-            paths.push_back(world_state);
+            hpaths.push_back(world_state);
         }
     }
 
-    std::cout << "time test " << paths[0].time << " size " << paths.size() << "\n";
-//
-//    std::vector<State> *ptr;
-//    ptr = &path;
-//    std::cout << "time test " << (*ptr)[0].time << "\n";
+    thrust::device_vector<State> dpaths = hpaths;
+    State* path_ptr = thrust::raw_pointer_cast(&dpaths[0]);
+
+    std::cout << "time test " << path_ptr[0].time << "\n";
 
     R = deals_at_once; // number of rows
     C = num_gpus; // number of columns
