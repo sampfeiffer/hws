@@ -3,29 +3,24 @@
 //timing for different parts
 //change to pass by reference
 
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
 #include <thrust/reduce.h>
 #include <thrust/copy.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <omp.h>
 
-#include <vector>
 #include <numeric>
 #include <time.h>
 
 #include "parameters.h"
 #include "data_reader.h"
-#include "state.h"
 #include "functors.h"
+#include "helper_functions.h"
 
 typedef thrust::device_vector<Fx> dvec_fx;
 typedef dvec_fx *p_dvec_fx;
 typedef thrust::device_vector<Swap> dvec_swap;
 typedef dvec_swap *p_dvec_swap;
-typedef thrust::device_vector<float> cva_vector;
-typedef cva_vector *p_cva_vec;
 
 int main(int argc, char *argv[])
 {
@@ -33,10 +28,12 @@ int main(int argc, char *argv[])
     clock_t program_start_time, mid_time, end_time;
     program_start_time = clock();
 
-    void print_results(std::vector<long> &total_cva, float &multiple);
+
+    thrust::host_vector<State> generate_paths(Parameters &params, int &num_of_steps);
     int gpu_info(int &num_gpus, Parameters &params);
-    thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vectors_std, int R, int C);
+    thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> &cva_vectors_std, int &deals_at_once, int &num_gpus);
     void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector<float> &cva_vector_host, Parameters &params, const char* counterparty_deals_filename, bool is_fx);
+    void print_results(std::vector<long> &total_cva, float &multiple);
 
     const char* parameters_filename="parameters.txt";
     const char* state0_filename="state0.txt";
@@ -57,16 +54,18 @@ int main(int argc, char *argv[])
     deals_at_once = gpu_info(num_gpus, params);
     int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
 
-    thrust::host_vector<State> hpaths;
-    for (int sim=0; sim<params.simulation_num; ++sim){
-        State world_state(params);
-        for (int i=0; i<num_of_steps; ++i){
-            world_state.sim_next_step();
-            hpaths.push_back(world_state);
-        }
-    }
+//    thrust::host_vector<State> hpaths;
+//    for (int sim=0; sim<params.simulation_num; ++sim){
+//        State world_state(params);
+//        for (int i=0; i<num_of_steps; ++i){
+//            world_state.sim_next_step();
+//            hpaths.push_back(world_state);
+//        }
+//    }
+//
+//    thrust::device_vector<State> dpaths = hpaths;
 
-    thrust::device_vector<State> dpaths = hpaths;
+    thrust::device_vector<State> dpaths = generate_paths(params, num_of_steps);
     State* path_ptr = thrust::raw_pointer_cast(dpaths.data());
 
     // initialize data on each GPU
@@ -104,7 +103,7 @@ int main(int argc, char *argv[])
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
             thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(),
-                              calculate_cva_fx(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
+                              calculate_cva(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
 
@@ -149,7 +148,8 @@ int main(int argc, char *argv[])
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
-            thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_swap(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
+            thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(),
+                              calculate_cva(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
 
@@ -173,121 +173,3 @@ int main(int argc, char *argv[])
     std::cout << "\n";
     return 0;
 }
-
-// Print results
-void print_results(std::vector<long> &total_cva, float &multiple)
-{
-    const char* cva_output_filename="cva_output.txt";
-    std::ofstream cva_output_outfile;
-    cva_output_outfile.open(cva_output_filename);
-    if (!cva_output_outfile.is_open()){
-        std::cout << "ERROR: cva_output.txt file could not be opened. Exiting.\n";
-        exit(1);
-    }
-    cva_output_outfile << "Counterparty  CVA\n";
-    for (unsigned int cp=0; cp<total_cva.size(); ++cp){
-        cva_output_outfile << cp+1 << " " << multiple*total_cva[cp] << "\n";
-    }
-    cva_output_outfile << "\nGrand Total Bank CVA " << multiple*std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
-    cva_output_outfile.close();
-
-    std::cout << "-----------------------------------------\n";
-    std::cout << "\nGrand Total Bank CVA " << multiple*std::accumulate(total_cva.begin(), total_cva.end(), 0) << "\n";
-}
-
-int gpu_info(int &num_gpus, Parameters &params)
-{
-    int deals_at_once;
-    // Determine the number of CUDA capable GPUs.
-    cudaGetDeviceCount(&num_gpus);
-    if (num_gpus > 1) --num_gpus; // I believe it counts a cpu also...
-    if (num_gpus < 1)
-    {
-        printf("no CUDA capable devices were detected\n");
-        return 1;
-    }
-    printf("number of host CPUs:\t%d\n", omp_get_num_procs());
-    printf("number of CUDA devices:\t%d\n", num_gpus);
-    for (int i = 0; i < num_gpus; i++)
-    {
-        cudaDeviceProp dprop;
-        cudaGetDeviceProperties(&dprop, i);
-        printf("   %d: %s. Memory available: %dMB\n", i+1, dprop.name, int(dprop.totalGlobalMem / (1024 * 1024)));
-        deals_at_once = dprop.totalGlobalMem/100;
-    }
-
-    deals_at_once = min(deals_at_once, params.fx_num);
-    if (params.fx_num % deals_at_once != 0) deals_at_once = (params.fx_num/deals_at_once) - (params.fx_num%deals_at_once); //Make sure it divides evenly;
-    std::cout << "Deals handled at once " << deals_at_once << "\n";
-    return deals_at_once;
-}
-
-thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vectors_std, int R, int C)
-{
-    // C= numgpus
-    // R= deals_at_once
-    // Find the average of the cva calculations over the different GPUs
-    thrust::device_vector<int> cva_sum(R * C);
-    for (size_t j=0; j<C; j++){
-        for (size_t i=0; i<R; i++){
-            cva_sum[j*C+i] = (*(cva_vectors_std[j]))[i];
-        }
-    }
-
-    // allocate storage for row sums and indices
-    thrust::device_vector<int> row_sums(R);
-    thrust::device_vector<int> row_indices(R);
-
-    // compute row sums by summing values with equal row indices
-    thrust::reduce_by_key
-        (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(R)),
-        thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(R)) + (R*C),
-        cva_sum.begin(),
-        row_indices.begin(),
-        row_sums.begin(),
-        thrust::equal_to<int>(),
-        thrust::plus<int>());
-
-//    thrust::device_vector<int> divisor(R);
-//    thrust::device_vector<int> cva_average(R);
-//    thrust::fill(divisor.begin(), divisor.end(), C);
-//    thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
-//
-//    return cva_average;
-    thrust::for_each(row_sums.begin(), row_sums.end(), divide_by<int>(C));
-    return row_sums;
-}
-
-// Convert CVA for FX deals into CVA for counterparties
-void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector<float> &cva_vector_host, Parameters &params, const char* counterparty_deals_filename, bool is_fx)
-{
-    int cp_id=1, cp_id_read, deal_id_read;
-    int total_deals = params.fx_num + params.swap_num;
-    float cva_temp=0;
-    std::ifstream counterparty_deals_infile;
-
-    counterparty_deals_infile.open(counterparty_deals_filename);
-    if (!counterparty_deals_infile.is_open()){
-        std::cout << "ERROR: " << counterparty_deals_filename << " file could not be opened. Exiting.\n";
-        exit(1);
-    }
-
-    counterparty_deals_infile >> cp_id_read;
-    for (int i=0; i<total_deals; ++i){
-        counterparty_deals_infile >> deal_id_read;
-        if (is_fx && deal_id_read <= params.fx_num){
-            cva_temp += cva_vector_host[deal_id_read-1];
-        }
-        else if (!is_fx && deal_id_read > params.fx_num){
-            cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
-        }
-        counterparty_deals_infile >> cp_id_read;
-        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
-            total_cva[cp_id-1] += cva_temp;
-            cva_temp = 0;
-            ++cp_id;
-        }
-    }
-    counterparty_deals_infile.close();
-}
-
