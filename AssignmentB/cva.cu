@@ -12,13 +12,20 @@
 
 #include <vector>
 #include <numeric>
-#include <sys/time.h>
+//#include <sys/time.h>
 #include <time.h>
 
 #include "parameters.h"
 #include "data_reader.h"
 #include "state.h"
-#include "functors2.h"
+#include "functors.h"
+
+typedef thrust::device_vector<Fx> dvec_fx;
+typedef dvec_fx *p_dvec_fx;
+typedef thrust::device_vector<Swap> dvec_swap;
+typedef dvec_swap *p_dvec_swap;
+typedef thrust::device_vector<float> cva_vector;
+typedef cva_vector *p_cva_vec;
 
 int main(int argc, char *argv[])
 {
@@ -36,12 +43,12 @@ int main(int argc, char *argv[])
     int cp_id=1, cp_id_read, deal_id_read, deals_at_once, num_gpus=0, R, C;
     float cva_temp=0;
 
-    typedef thrust::device_vector<Fx> dvec_fx;
-    typedef thrust::device_vector<float> cva_vector;
-    typedef dvec_fx *p_dvec_fx;
-    typedef cva_vector *p_cva_vec;
-    typedef thrust::device_vector<Swap> dvec_swap;
-    typedef dvec_swap *p_dvec_swap;
+//    typedef thrust::device_vector<Fx> dvec_fx;
+//    typedef dvec_fx *p_dvec_fx;
+//    typedef thrust::device_vector<Swap> dvec_swap;
+//    typedef dvec_swap *p_dvec_swap;
+//    typedef thrust::device_vector<float> cva_vector;
+//    typedef cva_vector *p_cva_vec;
 
     std::vector<p_dvec_fx> dvecs_fx;
     std::vector<p_dvec_swap> dvecs_swap;
@@ -57,12 +64,6 @@ int main(int argc, char *argv[])
     // Determine the number of CUDA capable GPUs. Calculate the number of deals to handle at a time.
     deals_at_once = gpu_info(num_gpus, params);
     int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
-
-    counterparty_deals_infile.open(counterparty_deals_filename);
-    if (!counterparty_deals_infile.is_open()){
-        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
-        exit(1);
-    }
 
     thrust::host_vector<State> hpaths;
     for (int sim=0; sim<params.simulation_num; ++sim){
@@ -115,7 +116,8 @@ int main(int argc, char *argv[])
         {
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
-            thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(), calculate_cva_fx(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
+            thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(),
+                              calculate_cva_fx(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
 
@@ -148,6 +150,11 @@ int main(int argc, char *argv[])
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
 
+    counterparty_deals_infile.open(counterparty_deals_filename);
+    if (!counterparty_deals_infile.is_open()){
+        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
+        exit(1);
+    }
     // Convert CVA for FX deals into CVA for counterparties
     counterparty_deals_infile >> cp_id_read;
     for (int i=0; i<total_deals; ++i){
@@ -311,4 +318,33 @@ int gpu_info(int &num_gpus, Parameters &params)
     std::cout << "Deals handled at once " << deals_at_once << "\n";
     return deals_at_once;
 }
+
+//thrust::device_vector<int> row_sum(cva_vectors_std, int R, int C)
+//{
+//    R = deals_at_once;
+//    C = num_gpus;
+//    // Find the average of the cva calculations over the different GPUs
+//    thrust::device_vector<int> cva_sum(R * C);
+//    for (size_t j=0; j<C; j++){
+//        for (size_t i=0; i<R; i++){
+//            cva_sum[i*C+j] = (*(cva_vectors_std[j]))[i];
+//        }
+//    }
+//
+//    // allocate storage for row sums and indices
+//    thrust::device_vector<int> row_sums(R);
+//    thrust::device_vector<int> row_indices(R);
+//
+//    // compute row sums by summing values with equal row indices
+//    thrust::reduce_by_key
+//        (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)),
+//        thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(C)) + (R*C),
+//        cva_sum.begin(),
+//        row_indices.begin(),
+//        row_sums.begin(),
+//        thrust::equal_to<int>(),
+//        thrust::plus<int>());
+//
+//    return row_sums;
+//}
 

@@ -9,6 +9,4 @@ cva: cva.cu
 	$(GCC2) $(CPPFLAGS2) -o cva.out cva.cu -lgomp
 
 clean:
-	rm generate_data.out
-	rm cva.out
-	rm -f *.o
+	rm -f *.o *.out
