@@ -7,27 +7,29 @@
 template <typename T>
 struct linear_index_to_row_index : public thrust::unary_function<T,T>
 {
-    T C; // number of columns
+    T num_of_deals; // number of rows
+
     __host__ __device__
-    linear_index_to_row_index(T C_) : C(C_) {}
+    linear_index_to_row_index(T num_of_deals_) : num_of_deals(num_of_deals_) {}
     __host__ __device__
     T operator()(T i)
     {
-    return i / C;
+        return i % num_of_deals;
     }
 };
 
-// convert a linear index to a row index
+// divide by a number
 template <typename T>
-struct linear_index_to_row_index2 : public thrust::unary_function<T,T>
+struct divide_by
 {
-    T num_of_deals; // number of columns
+    T divisor; // number to divide by
+
     __host__ __device__
-    linear_index_to_row_index2(T num_of_deals_) : num_of_deals(num_of_deals_) {}
+    divide_by(T divisor_) : divisor(divisor_) {}
     __host__ __device__
     T operator()(T i)
     {
-    return i % num_of_deals;
+        return i / divisor;
     }
 };
 
