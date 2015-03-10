@@ -146,14 +146,14 @@ int main(int argc, char *argv[])
 //            thrust::equal_to<int>(),
 //            thrust::plus<int>());
 
-        thrust::device_vector<int> row_sums = cva_average_over_gpu(cva_vectors_std, R, C);
+        //thrust::device_vector<int> row_sums = cva_average_over_gpu(cva_vectors_std, R, C);
 
-        thrust::device_vector<int> divisor(deals_at_once);
-        thrust::device_vector<int> cva_average(deals_at_once);
-        thrust::fill(divisor.begin(), divisor.end(), num_gpus);
-        thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
+//        thrust::device_vector<int> divisor(deals_at_once);
+//        thrust::device_vector<int> cva_average(deals_at_once);
+//        thrust::fill(divisor.begin(), divisor.end(), num_gpus);
+//        thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
 
-        //thrust::device_vector<int> cva_average = cva_average_over_gpu(cva_vectors_std, R, C);
+        thrust::device_vector<int> cva_average = cva_average_over_gpu(cva_vectors_std, R, C);
 
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
@@ -353,13 +353,13 @@ thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vecto
         thrust::equal_to<int>(),
         thrust::plus<int>());
 
-    return row_sums;
-//
-//    thrust::device_vector<int> divisor(C);
-//    thrust::device_vector<int> cva_average(C);
-//    thrust::fill(divisor.begin(), divisor.end(), R);
-//    thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
+    //return row_sums;
 
-    //return cva_average;
+    thrust::device_vector<int> divisor(C);
+    thrust::device_vector<int> cva_average(C);
+    thrust::fill(divisor.begin(), divisor.end(), R);
+    thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
+
+    return cva_average;
 }
 
