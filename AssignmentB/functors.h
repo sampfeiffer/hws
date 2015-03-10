@@ -17,6 +17,20 @@ struct linear_index_to_row_index : public thrust::unary_function<T,T>
     }
 };
 
+// convert a linear index to a row index
+template <typename T>
+struct linear_index_to_row_index2 : public thrust::unary_function<T,T>
+{
+    T num_of_deals; // number of columns
+    __host__ __device__
+    linear_index_to_row_index2(T num_of_deals_) : num_of_deals(num_of_deals_) {}
+    __host__ __device__
+    T operator()(T i)
+    {
+    return i % num_of_deals;
+    }
+};
+
 // Calculate the cva of an FX deal over a specified number of paths.
 struct calculate_cva_fx{
     int num_of_steps, paths_per_gpu;

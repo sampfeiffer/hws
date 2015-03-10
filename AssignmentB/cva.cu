@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
     void print_results(std::vector<long> &total_cva, float &multiple);
     int gpu_info(int &num_gpus, Parameters &params);
     thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vectors_std, int R, int C);
+    thrust::device_vector<int> cva_average_over_gpu2(std::vector<p_cva_vec> cva_vectors_std, int R, int C);
     void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector<float> &cva_vector_host, Parameters &params, const char* counterparty_deals_filename, bool is_fx);
 
     const char* parameters_filename="parameters.txt";
@@ -46,7 +47,6 @@ int main(int argc, char *argv[])
     std::vector<p_dvec_fx> dvecs_fx;
     std::vector<p_dvec_swap> dvecs_swap;
     std::vector<p_cva_vec> cva_vectors_std;
-
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename, state0_filename);
@@ -110,34 +110,10 @@ int main(int argc, char *argv[])
         }
 
         // Find the average of the cva calculations over the different GPUs
-        thrust::device_vector<int> cva_average = cva_average_over_gpu(cva_vectors_std, deals_at_once, num_gpus);
+        thrust::device_vector<int> cva_average = cva_average_over_gpu2(cva_vectors_std, deals_at_once, num_gpus);
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
 
-//    counterparty_deals_infile.open(counterparty_deals_filename);
-//    if (!counterparty_deals_infile.is_open()){
-//        std::cout << "ERROR: counterparty_deals.dat file could not be opened. Exiting.\n";
-//        exit(1);
-//    }
-//
-//    int cp_id=1, cp_id_read, deal_id_read;
-//    int total_deals = params.fx_num + params.swap_num;
-//    float cva_temp=0;
-//    std::vector<long> total_cva;
-//    // Convert CVA for FX deals into CVA for counterparties
-//    counterparty_deals_infile >> cp_id_read;
-//    for (int i=0; i<total_deals; ++i){
-//        counterparty_deals_infile >> deal_id_read;
-//        if (deal_id_read <= params.fx_num){
-//            cva_temp += cva_vector_host[deal_id_read-1];
-//        }
-//        counterparty_deals_infile >> cp_id_read;
-//        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
-//            total_cva.push_back(cva_temp);
-//            cva_temp = 0;
-//            ++cp_id;
-//        }
-//    }
     convert_to_counterparties(total_cva, cva_vector_host, params, counterparty_deals_filename, true);
 
     mid_time = clock();
@@ -183,28 +159,9 @@ int main(int argc, char *argv[])
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
 
-//    // Convert CVA for swaps into CVA for counterparties
-//    cp_id=1;
-//    cva_temp=0;
-//    counterparty_deals_infile.clear(); //gets rid of eof flag
-//    counterparty_deals_infile.seekg(0, counterparty_deals_infile.beg);
-//    counterparty_deals_infile >> cp_id_read;
-//    for (int i=0; i<total_deals; ++i){
-//        counterparty_deals_infile >> deal_id_read;
-//        if (deal_id_read > params.fx_num){
-//            cva_temp += cva_vector_host[deal_id_read-1-params.fx_num];
-//        }
-//        counterparty_deals_infile >> cp_id_read;
-//        if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
-//            total_cva[cp_id-1] += cva_temp;
-//            cva_temp = 0;
-//            ++cp_id;
-//        }
-//    }
     convert_to_counterparties(total_cva, cva_vector_host, params, counterparty_deals_filename, false);
 
     data.close_files();
-    //counterparty_deals_infile.close();
     end_time = clock();
     std::cout << "Finished Swap deals\n";
     std::cout << "Timing: Swap CVA " << float(end_time-mid_time)/CLOCKS_PER_SEC << " seconds.\n";
@@ -298,6 +255,40 @@ thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> cva_vecto
     return cva_average;
 }
 
+thrust::device_vector<int> cva_average_over_gpu2(std::vector<p_cva_vec> cva_vectors_std, int R, int C)
+{
+    // C= numgpus
+    // R= deals_at_once
+    // Find the average of the cva calculations over the different GPUs
+    thrust::device_vector<int> cva_sum(R * C);
+    for (size_t j=0; j<C; j++){
+        for (size_t i=0; i<R; i++){
+            cva_sum[j*C+i] = (*(cva_vectors_std[j]))[i];
+        }
+    }
+
+    // allocate storage for row sums and indices
+    thrust::device_vector<int> row_sums(R);
+    thrust::device_vector<int> row_indices(R);
+
+    // compute row sums by summing values with equal row indices
+    thrust::reduce_by_key
+        (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index2<int>(R)),
+        thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index2<int>(R)) + (R*C),
+        cva_sum.begin(),
+        row_indices.begin(),
+        row_sums.begin(),
+        thrust::equal_to<int>(),
+        thrust::plus<int>());
+
+    thrust::device_vector<int> divisor(R);
+    thrust::device_vector<int> cva_average(R);
+    thrust::fill(divisor.begin(), divisor.end(), C);
+    thrust::transform(row_sums.begin(), row_sums.end(), divisor.begin(), cva_average.begin(), thrust::divides<int>()); //divide by the num of gpu's used to find the average.
+
+    return cva_average;
+}
+
 // Convert CVA for FX deals into CVA for counterparties
 void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector<float> &cva_vector_host, Parameters &params, const char* counterparty_deals_filename, bool is_fx)
 {
@@ -323,7 +314,6 @@ void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector
         }
         counterparty_deals_infile >> cp_id_read;
         if (cp_id_read > cp_id || counterparty_deals_infile.eof()){
-            //total_cva.push_back(cva_temp);
             total_cva[cp_id-1] += cva_temp;
             cva_temp = 0;
             ++cp_id;
@@ -331,8 +321,4 @@ void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector
     }
     counterparty_deals_infile.close();
 }
-
-
-
-
 
