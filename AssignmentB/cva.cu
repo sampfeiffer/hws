@@ -22,10 +22,6 @@ typedef dvec_swap *p_dvec_swap;
 
 int main(int argc, char *argv[])
 {
-    // Start timing the program
-    //clock_t program_start_time, mid_time, end_time;
-    //clock_t mid_time, end_time;
-    //program_start_time = clock();
     Timing program_timing("whole program");
 
     // helper functions
@@ -105,10 +101,9 @@ int main(int argc, char *argv[])
     // Convert from CVA for fx deals to CVA for counterparties
     convert_to_counterparties(total_cva, cva_vector_host, params, counterparty_deals_filename, true);
 
-    //mid_time = clock();
     std::cout << "Finished FX deals\n";
-    //std::cout << "Timing: FX CVA " << float(mid_time-program_start_time)/CLOCKS_PER_SEC << " seconds.\n";
     fx_timing.end_timing();
+    program_timing.end_timing();
 
     //----------------------------------------------------------------------------------------------------
     // SWAPS
@@ -155,17 +150,13 @@ int main(int argc, char *argv[])
     convert_to_counterparties(total_cva, cva_vector_host, params, counterparty_deals_filename, false);
 
     data.close_files();
-    //end_time = clock();
     std::cout << "Finished Swap deals\n";
-    //std::cout << "Timing: Swap CVA " << float(end_time-mid_time)/CLOCKS_PER_SEC << " seconds.\n";
     swap_timing.end_timing();
 
     // Results
     print_results(total_cva, multiple);
 
-    //end_time = clock() - program_start_time;
-    //std::cout << "Timing: Whole program " << float(end_time)/CLOCKS_PER_SEC << " seconds.\n";
-    program_timing.end_timing();
     std::cout << "\n";
+    program_timing.end_timing();
     return 0;
 }

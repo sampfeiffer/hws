@@ -20,7 +20,7 @@ Timing::Timing(std::string program_part_)
 
 void Timing::end_timing()
 {
-    std::cout << "Timing for " << program_part << ": " << float(clock()-start_time)/CLOCKS_PER_SEC << " seconds.\n";
+    std::cout << "Timing: " << program_part << ": " << float(clock()-start_time)/CLOCKS_PER_SEC << " seconds.\n";
 }
 
 #endif // TIMING_INCLUDED
