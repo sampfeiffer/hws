@@ -9,7 +9,7 @@ struct Timing{
     std::string program_part;
 
     Timing(std::string program_part_);
-    void end_time();
+    void end_timing();
 };
 
 Timing::Timing(std::string program_part_)
@@ -18,7 +18,7 @@ Timing::Timing(std::string program_part_)
     program_part = program_part_;
 }
 
-void Timing::end_time()
+void Timing::end_timing()
 {
     std::cout << "Timing for " << program_part << ": " << float(clock()-start_time)/CLOCKS_PER_SEC << " seconds.\n";
 }
