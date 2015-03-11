@@ -12,6 +12,7 @@
 typedef thrust::device_vector<float> cva_vector;
 typedef cva_vector *p_cva_vec;
 
+// Determine the number of GPUs, their properties, and return the number of deals to handle at once
 int gpu_info(int &num_gpus, Parameters &params)
 {
     int deals_at_once;
@@ -39,6 +40,7 @@ int gpu_info(int &num_gpus, Parameters &params)
     return deals_at_once;
 }
 
+// Generate all the simulation paths
 thrust::host_vector<State> generate_paths(Parameters &params, int &num_of_steps)
 {
     thrust::host_vector<State> hpaths;
@@ -53,11 +55,10 @@ thrust::host_vector<State> generate_paths(Parameters &params, int &num_of_steps)
     return hpaths;
 }
 
+// Calculate the CVA average over the paths from different GPUs.
 thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> &cva_vectors_std, int &deals_at_once, int &num_gpus)
 {
-    // C= numgpus
-    // R= deals_at_once
-    // Find the average of the cva calculations over the different GPUs
+    // Get the vector of CVA vectors from the different GPUs into one vector.
     thrust::device_vector<int> cva_sum(deals_at_once * num_gpus);
     for (size_t j=0; j<num_gpus; j++){
         for (size_t i=0; i<deals_at_once; i++){
@@ -69,7 +70,7 @@ thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> &cva_vect
     thrust::device_vector<int> row_sums(deals_at_once);
     thrust::device_vector<int> row_indices(deals_at_once);
 
-    // compute row sums by summing values with equal row indices
+    // add up the CVA for the same deal over different GPUs
     thrust::reduce_by_key
         (thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(deals_at_once)),
         thrust::make_transform_iterator(thrust::counting_iterator<int>(0), linear_index_to_row_index<int>(deals_at_once)) + (deals_at_once*num_gpus),
@@ -84,7 +85,7 @@ thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> &cva_vect
     return row_sums;
 }
 
-// Convert CVA for FX deals into CVA for counterparties
+// Convert CVA for each deal into CVA for each counterparty
 void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector<float> &cva_vector_host, Parameters &params, const char* counterparty_deals_filename, bool is_fx)
 {
     int cp_id=1, cp_id_read, deal_id_read;
@@ -117,7 +118,7 @@ void convert_to_counterparties(std::vector<long> &total_cva, thrust::host_vector
     counterparty_deals_infile.close();
 }
 
-// Print results
+// Print CVA results
 void print_results(std::vector<long> &total_cva, float &multiple)
 {
     const char* cva_output_filename="cva_output.txt";

@@ -35,6 +35,7 @@ void State::sim_next_step()
     amer.sim_next_step();
     euro.sim_next_step();
     fx_rate += fx_vol*sqrt(float(step_size/360.0))*amer.standard_normal(amer.generator);
+    //fx_rate += fx_vol*sqrt(float(step_size/360.0))*standard_normal(generator);
     ++time;
     cva_disc_factor = pow(1+cva_disc_rate, float(-time/360.0));
 }

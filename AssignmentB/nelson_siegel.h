@@ -4,6 +4,10 @@
 #include <thrust/random/linear_congruential_engine.h>
 #include <thrust/random/normal_distribution.h>
 
+//__device__ thrust::minstd_rand generator;
+//__device__ thrust::random::normal_distribution<float> standard_normal;
+
+
 struct NelsonSiegel{
     float step_size;
     float betas[4], betas_beg[4];

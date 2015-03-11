@@ -1,21 +1,19 @@
 //seed
 //code cleaning
 //timing for different parts
-//change to pass by reference
 
 #include <thrust/reduce.h>
 #include <thrust/copy.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <omp.h>
-
 #include <numeric>
-#include <time.h>
 
 #include "parameters.h"
 #include "data_reader.h"
 #include "functors.h"
 #include "helper_functions.h"
+#include "timing.h"
 
 typedef thrust::device_vector<Fx> dvec_fx;
 typedef dvec_fx *p_dvec_fx;
@@ -28,7 +26,7 @@ int main(int argc, char *argv[])
     clock_t program_start_time, mid_time, end_time;
     program_start_time = clock();
 
-
+    // helper functions
     thrust::host_vector<State> generate_paths(Parameters &params, int &num_of_steps);
     int gpu_info(int &num_gpus, Parameters &params);
     thrust::device_vector<int> cva_average_over_gpu(std::vector<p_cva_vec> &cva_vectors_std, int &deals_at_once, int &num_gpus);
@@ -38,33 +36,22 @@ int main(int argc, char *argv[])
     const char* parameters_filename="parameters.txt";
     const char* state0_filename="state0.txt";
     const char* counterparty_deals_filename="counterparty_deals.dat";
-    int deals_at_once, num_gpus=0;
-
-    std::vector<p_dvec_fx> dvecs_fx;
-    std::vector<p_dvec_swap> dvecs_swap;
-    std::vector<p_cva_vec> cva_vectors_std;
 
     // Get parameters and initial state of the world.
     Parameters params(parameters_filename, state0_filename);
     int num_of_steps = params.days_in_year*params.time_horizon/params.step_size;
+    int num_gpus=0;
     float multiple = 1-params.recovery_rate;
+    std::vector<p_dvec_fx> dvecs_fx;
+    std::vector<p_dvec_swap> dvecs_swap;
+    std::vector<p_cva_vec> cva_vectors_std;
     std::vector<long> total_cva(params.counterparty_num, 0);
 
     // Determine the number of CUDA capable GPUs. Calculate the number of deals to handle at a time.
-    deals_at_once = gpu_info(num_gpus, params);
-    int simulations_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
+    int deals_at_once = gpu_info(num_gpus, params);
+    int paths_per_gpu = params.simulation_num/num_gpus; // Paths are split between the GPUs
 
-//    thrust::host_vector<State> hpaths;
-//    for (int sim=0; sim<params.simulation_num; ++sim){
-//        State world_state(params);
-//        for (int i=0; i<num_of_steps; ++i){
-//            world_state.sim_next_step();
-//            hpaths.push_back(world_state);
-//        }
-//    }
-//
-//    thrust::device_vector<State> dpaths = hpaths;
-
+    // Generate the simulation paths.
     thrust::device_vector<State> dpaths = generate_paths(params, num_of_steps);
     State* path_ptr = thrust::raw_pointer_cast(dpaths.data());
 
@@ -103,7 +90,7 @@ int main(int argc, char *argv[])
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
             thrust::transform((*(dvecs_fx[cpu_thread_id])).begin(), (*(dvecs_fx[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(),
-                              calculate_cva(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
+                              calculate_cva(num_of_steps, paths_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
 
@@ -112,6 +99,7 @@ int main(int argc, char *argv[])
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
 
+    // Convert from CVA for fx deals to CVA for counterparties
     convert_to_counterparties(total_cva, cva_vector_host, params, counterparty_deals_filename, true);
 
     mid_time = clock();
@@ -149,7 +137,7 @@ int main(int argc, char *argv[])
             unsigned int cpu_thread_id = omp_get_thread_num();
             cudaSetDevice(cpu_thread_id);
             thrust::transform((*(dvecs_swap[cpu_thread_id])).begin(), (*(dvecs_swap[cpu_thread_id])).end(), (*(cva_vectors_std[cpu_thread_id])).begin(),
-                              calculate_cva(num_of_steps, simulations_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
+                              calculate_cva(num_of_steps, paths_per_gpu, path_ptr+k*params.fx_num/deals_at_once));
             cudaDeviceSynchronize();
         }
 
@@ -158,6 +146,7 @@ int main(int argc, char *argv[])
         thrust::copy(cva_average.begin(), cva_average.end(), cva_vector_host.begin()+k*deals_at_once);
     }
 
+    // Convert from CVA for swaps to CVA for counterparties
     convert_to_counterparties(total_cva, cva_vector_host, params, counterparty_deals_filename, false);
 
     data.close_files();
