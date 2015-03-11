@@ -1,7 +1,3 @@
-//seed
-//code cleaning
-//timing for different parts
-
 #include <thrust/reduce.h>
 #include <thrust/copy.h>
 #include <cuda.h>
@@ -103,7 +99,6 @@ int main(int argc, char *argv[])
 
     std::cout << "Finished FX deals\n";
     fx_timing.end_timing();
-    program_timing.end_timing();
 
     //----------------------------------------------------------------------------------------------------
     // SWAPS
