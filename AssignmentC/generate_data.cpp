@@ -5,15 +5,23 @@
 
 //change Average time between ticks in milliseconds to 9 to make 45GB
 
+// Gets the next piece of data from the input file
+void get_next_data(std::ifstream &input_data_infile, double &data)
+{
+    input_data_infile.seekg(10, input_data_infile.cur); //Skip the date
+    input_data_infile >> data;
+}
+
 int main(int argc, char *argv[])
 {
+    void get_next_data(std::ifstream &input_data_infile, double &data);
     const char* parameters_filename = "parameters.txt";
     const char* input_data_filename = "input_data.txt";
     const char* tick_data_filename = "tick_data.dat";
     std::ifstream input_data_infile;
     std::ofstream tick_data_outfile;
 
-    int milliseconds_in_day = 24*60*60*1000, date;
+    int milliseconds_in_day = 24*60*60*1000;
     double fed_rate_old, fed_rate_new, tick_value, drift_per_tick;
 
     // Setup the standard normal generator
@@ -42,20 +50,21 @@ int main(int argc, char *argv[])
     }
 
     // Get the initial fed fund rate
-    input_data_infile >> date;
-    input_data_infile >> fed_rate_old;
+    get_next_data(input_data_infile, fed_rate_old);
     tick_data_outfile << fed_rate_old << "\n";
 
     // For each daily fed fund rate, create the appropriate number of intraday ticks
     while (!input_data_infile.eof()){
-        input_data_infile >> date;
-        input_data_infile >> fed_rate_new;
+        get_next_data(input_data_infile, fed_rate_new);
         drift_per_tick = (fed_rate_new - fed_rate_old)/ticks_per_day;
+
+        // Fill in the tick data
         tick_value = fed_rate_old;
         for (int j=0; j<ticks_per_day; ++j){
             tick_value += drift_per_tick + stdev_per_tick*standard_normal(generator);
             tick_data_outfile << tick_value << "\n";
         }
+
         tick_data_outfile << fed_rate_new << "\n";
         fed_rate_old = fed_rate_new;
     }
