@@ -1,7 +1,7 @@
 #!/bin/bash
 # Simple MPI PBS Pro batch job
 #PBS -N testMPI
-#PBS -q production_qdr
+#PBS -q production
 #PBS -l select=16:ncpus=1
 #PBS -l place=free
 #PBS -V
@@ -9,5 +9,5 @@
 cd $PBS_O_WORKDIR
 
 echo "Starting...."
-mpirun -np 16 ./test.out
-echo "Job is done!"
+mpirun -np 16 ./test.out >  logging.txt 2>&1
+echo "Job is done!" 
