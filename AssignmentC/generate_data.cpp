@@ -3,7 +3,7 @@
 #include <time.h>
 #include "parameters.h"
 
-//change Average time between ticks in milliseconds to 9 to make 45GB
+//change average time between ticks in milliseconds to 87 to make 45GB
 
 // Gets the next piece of data from the input file
 void get_next_data(std::ifstream &input_data_infile, double &data)
