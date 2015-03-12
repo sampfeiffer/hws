@@ -1,0 +1,2 @@
+Average time between ticks in milliseconds, 1000000
+Standard error of original data, 0.028341
