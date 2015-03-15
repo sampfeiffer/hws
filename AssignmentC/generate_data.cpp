@@ -8,7 +8,7 @@
 // Gets the next piece of data from the input file
 void get_next_data(std::ifstream &input_data_infile, double &data)
 {
-    input_data_infile.seekg(10, input_data_infile.cur); //Skip the date
+    input_data_infile >> data; //Skip the date
     input_data_infile >> data;
 }
 
@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
         std::cout << "ERROR: tick_data.dat file could not be opened. Exiting.\n";
         exit(1);
     }
+    tick_data_outfile.setf( std::ios::fixed, std:: ios::floatfield );
 
     // Get the initial fed fund rate
     get_next_data(input_data_infile, fed_rate_old);
