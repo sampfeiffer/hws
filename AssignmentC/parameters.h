@@ -7,7 +7,7 @@
 
 struct Parameters{
 
-    int time_bet_ticks;
+    int time_bet_ticks, chars_per_line;
     float standard_error;
 
     Parameters(const char* parameters_filename); // Constructor
@@ -27,6 +27,7 @@ Parameters::Parameters(const char* parameters_filename)
 
     time_bet_ticks = atoi(get_param(parameters_infile));
     standard_error = atof(get_param(parameters_infile));
+    chars_per_line = atoi(get_param(parameters_infile));
 
     parameters_infile.close();
 }
@@ -45,7 +46,8 @@ void Parameters::print()
 {
     std::cout << "\nParameters"
               << "\nAverage time between ticks in milliseconds: " << time_bet_ticks
-              << "\nStandard error of original data: " << standard_error << "\n\n";
+              << "\nStandard error of original data: " << standard_error
+              << "\nCharacters per line of data: " << chars_per_line << "\n\n";
 }
 
 #endif // PARAMETERS_INCLUDED

@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
         std::cout << "ERROR: tick_data.dat file could not be opened. Exiting.\n";
         exit(1);
     }
-    tick_data_outfile.setf( std::ios::fixed, std:: ios::floatfield );
+    tick_data_outfile.setf(std::ios::fixed, std:: ios::floatfield);
 
     // Get the initial fed fund rate
     get_next_data(input_data_infile, fed_rate_old);
