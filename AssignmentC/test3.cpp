@@ -7,10 +7,12 @@
 #include <math.h>
 #include "parameters.h"
 
+// TODO remember to divide sum by 100 and sum^2 by 10000
+
 int main(int argc, char **argv){
     int line_length = 9;
     int rank, size, ierr;
-    char* filename = "tick_data1.dat";
+    char* filename = "tick_data.dat";
     char* parameters_filename = "parameters.txt";
     Parameters params(parameters_filename);
     MPI_File infile;
@@ -62,7 +64,6 @@ int main(int argc, char **argv){
     int ints_per_thread = round((float(filesize)/params.chars_per_line)/size);
 
     MPI_File_close(&infile);
-    MPI_Finalize();
 
     std::stringstream str_value;
     float float_value;
@@ -71,16 +72,35 @@ int main(int argc, char **argv){
     str_value.str(std::string());
     str_value << temp;
 
-    float sum=0, square_sum=0;
+    double sum=0, square_sum=0;
 
     for (int i=0; i<ints_per_thread; ++i) {
         str_value >> float_value;
         sum += float_value;
         square_sum += float_value*float_value;
-        //std::cout << rank << " " << float_value << "\n";
     }
+
+    int thread_totals[2] = {sum, square_sum};
+
     std::cout << rank << " " << sum << " " << square_sum << "\n";
+    if (rank != 0) MPI_Send(&thread_totals, 2, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    if (rank == 0){
+        int grand_totals[2] = {sum, square_sum}, temp[2]={0,0};
+        for (int i=1; i<size; ++i){
+            MPI_Recv(&temp, 2, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            grand_totals[0] += temp[0];
+            grand_totals[1] += temp[1];
+            std::cout << i << "temp " << temp[0] << " " << temp[1] << "\n";
+        }
+        grand_totals[0] /= 100;
+        grand_totals[1] /= 10000;
+        std::cout << "total sum " << grand_totals[0] << " " << grand_totals[1] << "\n";
+
+    }
+
+    MPI_Finalize();
 
     return 0;
 }
+
 
