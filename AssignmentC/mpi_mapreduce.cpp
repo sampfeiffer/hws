@@ -5,10 +5,9 @@
 #include "logging.h"
 #include "timing.h"
 
-#include <sys/sysinfo.h>
-
 int main(int argc, char **argv){
     const char* parameters_filename = "parameters.txt";
+    //std::stringstream logging_text;
     Parameters params(parameters_filename);
     Timing program_timer("program");
 
@@ -21,26 +20,22 @@ int main(int argc, char **argv){
     // Logging info
     Logging logger("logging.dat");
     if (rank == 0){
-        logger.start_info(params, argc, argv);
+        logger.start_info(params, argc, argv, size);
+        //logging_text << "rank totalRAM freeRAM procs\n";
+        //logger.write(logging_text);
+        logger.log_file << "rank totalRAM freeRAM procs\n";
+        logger.log_file.flush();
     }
 
-
-    struct sysinfo info;
-    if (sysinfo(&info) != 0){
-        std::cout << "sysinfo: error reading system statistics\n";
-    }
-    else {
-        std::cout << "total RAM: "<< info.totalram/(1024*1024) << "MB\n";
-        std::cout << "free RAM: "<< info.freeram/(1024*1024) << "MB\n";
-        std::cout << "procs: "<< info.procs << "\n";
-    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    logger.hardware_info(rank);
 
     MPI_File infile;
     int ierr;
 
     ierr = MPI_File_open(MPI_COMM_WORLD, params.tick_data_filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &infile);
     if (ierr) {
-        if (rank == 0) fprintf(stderr, "Couldn't open file %s\n", params.tick_data_filename);
+        if (rank == 0) fprintf(stderr, "Couldn't open file %s. Make sure to generate data first.\n", params.tick_data_filename);
         MPI_Finalize();
         exit(1);
     }
@@ -115,7 +110,6 @@ int main(int argc, char **argv){
         float mean = grand_totals[0]/num_of_data;
         float stdev = sqrt((grand_totals[1] - (1/num_of_data)*pow(grand_totals[0],2)) / (num_of_data-1));
 
-        //std::cout << "total sum " << grand_totals[0] << " " << grand_totals[1] << "\n";
         std::cout << "num_of_data " << num_of_data << "\n";
         std::cout << "mean " << mean << "\n";
         std::cout << "stdev " << stdev << "\n";
@@ -136,6 +130,7 @@ int main(int argc, char **argv){
 
         tick_data_infile.close();
         program_timer.end_timing();
+        //logger.log_file << program_timer.print();
         std::cout << program_timer.print();
     }
 
