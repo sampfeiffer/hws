@@ -1,19 +1,39 @@
 #include <mpi.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
-#include <sstream>
-#include <fstream>
-#include "parameters.h"
+
+#include "logging.h"
+#include "timing.h"
+
+#include <sys/sysinfo.h>
 
 int main(int argc, char **argv){
     const char* parameters_filename = "parameters.txt";
     Parameters params(parameters_filename);
+    Timing program_timer("program");
 
     int rank, size;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+
+    // Logging info
+    Logging logger("logging.dat");
+    if (rank == 0){
+        logger.start_info(params, argc, argv);
+    }
+
+
+    struct sysinfo info;
+    if (sysinfo(&info) != 0){
+        std::cout << "sysinfo: error reading system statistics\n";
+    }
+    else {
+        std::cout << "total RAM: "<< info.totalram/(1024*1024) << "MB\n";
+        std::cout << "free RAM: "<< info.freeram/(1024*1024) << "MB\n";
+        std::cout << "procs: "<< info.procs << "\n";
+    }
 
     MPI_File infile;
     int ierr;
@@ -76,7 +96,7 @@ int main(int argc, char **argv){
         square_sum += float_value*float_value;
     }
 
-    int thread_totals[2] = {sum, square_sum};
+    int thread_totals[2] = {int(sum), int(square_sum)};
 
     if (rank != 0) MPI_Send(&thread_totals, 2, MPI_INT, 0, 0, MPI_COMM_WORLD);
     if (rank == 0){
@@ -115,6 +135,8 @@ int main(int argc, char **argv){
         std::cout << "drift " << (end_data-start_data)/100 << "\n";
 
         tick_data_infile.close();
+        program_timer.end_timing();
+        std::cout << program_timer.print();
     }
 
     MPI_Finalize();

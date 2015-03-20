@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     // Get (and print) the program paramters.
     Parameters params(parameters_filename);
-    params.print();
+    std::cout << params.print();
 
     // Determine the number of ticks per day and the standard deviation of each tick.
     int ticks_per_day = milliseconds_in_day/params.time_bet_ticks - 1;

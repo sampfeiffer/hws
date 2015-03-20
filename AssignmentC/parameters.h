@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 
 struct Parameters{
 
@@ -16,7 +17,7 @@ struct Parameters{
     ~Parameters(); // Destructor
     const char* get_param(std::ifstream &infile);
     std::string get_param_string(std::ifstream &infile);
-    void print();
+    std::string print();
 };
 
 // Constructor. Read all the paramaters from the input files.
@@ -66,14 +67,16 @@ std::string Parameters::get_param_string(std::ifstream &infile)
 }
 
 // Print all the parameters and initial state
-void Parameters::print()
+std::string Parameters::print()
 {
-    std::cout << "\nParameters"
+    std::stringstream ss;
+    ss << "\nParameters"
               << "\nAverage time between ticks in milliseconds: " << time_bet_ticks
               << "\nStandard error of original data: " << standard_error
               << "\nCharacters per line of data: " << chars_per_line
               << "\nOriginal data filename: " << input_data_filename
               << "\nTick data filename: " << tick_data_filename << "\n\n";
+    return ss.str();
 }
 
 #endif // PARAMETERS_INCLUDED
