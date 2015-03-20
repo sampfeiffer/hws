@@ -9,9 +9,13 @@ struct Parameters{
 
     int time_bet_ticks, chars_per_line;
     float standard_error;
+    std::string input_data_filename;
+    char* tick_data_filename;
 
     Parameters(const char* parameters_filename); // Constructor
+    ~Parameters(); // Destructor
     const char* get_param(std::ifstream &infile);
+    std::string get_param_string(std::ifstream &infile);
     void print();
 };
 
@@ -28,8 +32,19 @@ Parameters::Parameters(const char* parameters_filename)
     time_bet_ticks = atoi(get_param(parameters_infile));
     standard_error = atof(get_param(parameters_infile));
     chars_per_line = atoi(get_param(parameters_infile));
+    input_data_filename = get_param_string(parameters_infile);
+    std::string temp_filename = get_param_string(parameters_infile);
+    tick_data_filename = new char[temp_filename.size() + 1];
+    std::copy(temp_filename.begin(), temp_filename.end(), tick_data_filename);
+    tick_data_filename[temp_filename.size()] = '\0';
 
     parameters_infile.close();
+}
+
+// Destructor
+Parameters::~Parameters()
+{
+    delete [] tick_data_filename;
 }
 
 // Get a single parameter
@@ -41,13 +56,24 @@ const char* Parameters::get_param(std::ifstream &infile)
     return text.c_str();
 }
 
+// Get a single parameter that is a string
+std::string Parameters::get_param_string(std::ifstream &infile)
+{
+    std::string text;
+    getline(infile, text, ','); // data is always right after a comma
+    getline(infile, text);
+    return text;
+}
+
 // Print all the parameters and initial state
 void Parameters::print()
 {
     std::cout << "\nParameters"
               << "\nAverage time between ticks in milliseconds: " << time_bet_ticks
               << "\nStandard error of original data: " << standard_error
-              << "\nCharacters per line of data: " << chars_per_line << "\n\n";
+              << "\nCharacters per line of data: " << chars_per_line
+              << "\nOriginal data filename: " << input_data_filename
+              << "\nTick data filename: " << tick_data_filename << "\n\n";
 }
 
 #endif // PARAMETERS_INCLUDED

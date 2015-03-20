@@ -16,8 +16,6 @@ int main(int argc, char *argv[])
 {
     void get_next_data(std::ifstream &input_data_infile, double &data);
     const char* parameters_filename = "parameters.txt";
-    const char* input_data_filename = "input_data.txt";
-    const char* tick_data_filename = "tick_data.dat";
     std::ifstream input_data_infile;
     std::ofstream tick_data_outfile;
 
@@ -25,7 +23,8 @@ int main(int argc, char *argv[])
     double fed_rate_old, fed_rate_new, tick_value, drift_per_tick;
 
     // Setup the standard normal generator
-    srand(time(NULL));
+    //srand(time(NULL));
+    srand(0);
     std::default_random_engine generator;
     std::normal_distribution<double> standard_normal(0,1);
 
@@ -38,17 +37,19 @@ int main(int argc, char *argv[])
     double stdev_per_tick = params.standard_error/std::sqrt(ticks_per_day);
 
     // Open the input and output files
-    input_data_infile.open(input_data_filename);
+    input_data_infile.open(params.input_data_filename);
     if (!input_data_infile.is_open()){
-        std::cout << "ERROR: input_data.txt file could not be opened. Exiting.\n";
+        std::cout << "ERROR: " << params.input_data_filename << " file could not be opened. Exiting.\n";
         exit(1);
     }
-    tick_data_outfile.open(tick_data_filename);
+    tick_data_outfile.open(params.tick_data_filename);
     if (!tick_data_outfile.is_open()){
-        std::cout << "ERROR: tick_data.dat file could not be opened. Exiting.\n";
+        std::cout << "ERROR: file could not be opened. Exiting.\n";
         exit(1);
     }
-    tick_data_outfile.setf(std::ios::fixed, std:: ios::floatfield);
+    // Format the output to the correct decimals
+    tick_data_outfile.precision(params.chars_per_line-3);
+    tick_data_outfile.setf(std::ios::fixed);
 
     // Get the initial fed fund rate
     get_next_data(input_data_infile, fed_rate_old);
