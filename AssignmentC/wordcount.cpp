@@ -1,13 +1,14 @@
 #include <algorithm>
 #include <limits>
 #include <string>
- 
+#include <stdlib.h>
+
 #include  "stdint.h"  // <--- to prevent uint64_t errors!
- 
+
 #include "hadoop/Pipes.hh"
 #include "hadoop/TemplateFactory.hh"
 #include "hadoop/StringUtils.hh"
- 
+
 using namespace std;
 
 class WordCountMapper : public HadoopPipes::Mapper {
@@ -21,18 +22,13 @@ public:
   void map( HadoopPipes::MapContext& context ) {
     //--- get line of text ---
     string line = context.getInputValue();
-
-    //--- split it into words ---
-    vector< string > words =
-      HadoopUtils::splitString( line, " " );
+    float test = atoi(line.c_str());
 
     //--- emit each word tuple (word, "1" ) ---
-    for ( unsigned int i=0; i < words.size(); i++ ) {
-      context.emit( words[i], HadoopUtils::toString( 1 ) );
-    }
+    context.emit( line, HadoopUtils::toString(test) );
   }
 };
- 
+
 class WordCountReducer : public HadoopPipes::Reducer {
 public:
   // constructor: does nothing
@@ -52,7 +48,7 @@ public:
     context.emit(context.getInputKey(), HadoopUtils::toString( count ));
   }
 };
- 
+
 int main(int argc, char *argv[]) {
   return HadoopPipes::runTask(HadoopPipes::TemplateFactory<
                               WordCountMapper,
