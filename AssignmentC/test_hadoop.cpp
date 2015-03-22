@@ -1,8 +1,9 @@
 #include <algorithm>
 #include <limits>
 #include <string>
-#include <sstream>
 #include <stdlib.h>
+#include <math.h>
+#include <sstream>
 
 #include  "stdint.h"  // <--- to prevent uint64_t errors!
 
@@ -35,21 +36,42 @@ public:
 
 class WordCountReducer : public HadoopPipes::Reducer {
 public:
+
+    double mean;
+
     // constructor: does nothing
     WordCountReducer(HadoopPipes::TaskContext& context) {}
 
     // reduce function
     void reduce( HadoopPipes::ReduceContext& context )
     {
-        float count = 0;
+        double count = 0;
+        int num_of_data = 0;
 
         //--- get all tuples with the same key, and count their numbers ---
         while ( context.nextValue() ) {
           count += HadoopUtils::toFloat( context.getInputValue() );
+          ++num_of_data;
         }
 
-        //--- emit (word, count) ---
-        context.emit(context.getInputKey(), HadoopUtils::toString( count ));
+
+        std::stringstream temp;
+        temp << count;
+        context.emit(context.getInputKey(), temp.str());
+        temp.str("");
+        if (context.getInputKey() == "sum"){
+            context.emit("num_of_data", HadoopUtils::toString( num_of_data ));
+            mean = count/(100.0*num_of_data);
+            temp << mean;
+            context.emit("mean", temp.str());
+        }
+        else {
+            double real_sum_squared = count / 10000.0;
+            double stdev = sqrt((real_sum_squared - num_of_data*mean*mean) / (num_of_data-1));
+            temp << stdev;
+            context.emit("stdev", temp.str());
+        }
+
     }
 };
 
