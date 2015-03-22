@@ -4,8 +4,10 @@
 
 #include "logging.h"
 #include "timing.h"
+#include "get_drift.h"
 
 int main(int argc, char **argv){
+    float get_drift(char* tick_data_filename, int &chars_per_line);
     const char* parameters_filename = "parameters.txt";
     //std::stringstream logging_text;
     Parameters params(parameters_filename);
@@ -114,21 +116,8 @@ int main(int argc, char **argv){
         std::cout << "mean " << mean << "\n";
         std::cout << "stdev " << stdev << "\n";
 
-        std::ifstream tick_data_infile;
-        tick_data_infile.open(params.tick_data_filename);
-        if (!tick_data_infile.is_open()){
-            std::cout << "ERROR: tick_data.dat file could not be opened. Exiting.\n";
-            exit(1);
-        }
+        std::cout << "drift " << get_drift(params.tick_data_filename, params.chars_per_line) << "\n";
 
-        float start_data, end_data;
-        tick_data_infile >> start_data;
-        tick_data_infile.seekg(-(params.chars_per_line+1), tick_data_infile.end);
-        tick_data_infile >> end_data;
-
-        std::cout << "drift " << (end_data-start_data)/100 << "\n";
-
-        tick_data_infile.close();
         program_timer.end_timing();
         //logger.log_file << program_timer.print();
         std::cout << program_timer.print();
