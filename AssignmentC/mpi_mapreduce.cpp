@@ -9,28 +9,19 @@
 int main(int argc, char **argv){
     float get_drift(char* tick_data_filename, int &chars_per_line);
     const char* parameters_filename = "parameters.txt";
-    //std::stringstream logging_text;
     Parameters params(parameters_filename);
-    Timing program_timer("program");
+    Timing program_timer("whole program");
 
     int rank, size;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-
     // Logging info
     Logging logger("logging.dat");
     if (rank == 0){
         logger.start_info(params, argc, argv, size);
-        //logging_text << "rank totalRAM freeRAM procs\n";
-        //logger.write(logging_text);
-        logger.log_file << "rank totalRAM freeRAM procs\n";
-        logger.log_file.flush();
     }
-
-    MPI_Barrier(MPI_COMM_WORLD);
-    logger.hardware_info(rank);
 
     MPI_File infile;
     int ierr;
@@ -112,15 +103,19 @@ int main(int argc, char **argv){
         float mean = grand_totals[0]/num_of_data;
         float stdev = sqrt((grand_totals[1] - (1/num_of_data)*pow(grand_totals[0],2)) / (num_of_data-1));
 
-        std::cout << "num_of_data " << num_of_data << "\n";
-        std::cout << "mean " << mean << "\n";
-        std::cout << "stdev " << stdev << "\n";
+        std::stringstream ss;
+        ss << "num_of_data " << num_of_data << "\n";
+        ss << "mean " << mean << "\n";
+        ss << "stdev " << stdev << "\n";
 
-        std::cout << "drift " << get_drift(params.tick_data_filename, params.chars_per_line) << "\n";
+        ss << "drift " << get_drift(params.tick_data_filename, params.chars_per_line) << "\n";
+
+        std::cout << ss.str();
 
         program_timer.end_timing();
-        //logger.log_file << program_timer.print();
-        std::cout << program_timer.print();
+        ss << program_timer.print();
+
+        logger.write(ss);
     }
 
     MPI_Finalize();
