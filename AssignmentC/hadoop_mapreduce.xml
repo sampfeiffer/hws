@@ -3,7 +3,7 @@
   <property>
     // Set the binary path on DFS
     <name>hadoop.pipes.executable</name>
-    <value>bin/wordcount</value>
+    <value>bin/hadoop_mapreduce.out</value>
   </property>
   <property>
     <name>hadoop.pipes.java.recordreader</name>
