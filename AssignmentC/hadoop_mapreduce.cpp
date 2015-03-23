@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sstream>
-#include "parameters.h"
-#include "get_drift.h"
 
 #include  "stdint.h"  // <--- to prevent uint64_t errors!
 
@@ -75,17 +73,6 @@ public:
 
 int main(int argc, char *argv[])
 {
-    float get_drift(char* tick_data_filename, int &chars_per_line);
-
-    //get drift
-//    char* tick_data_filename = "tick_data.dat";
-//    int chars_per_line = 9;
-//    std::stringstream drift;
-//    drift << get_drift(tick_data_filename, chars_per_line);
-    //context.emit("drift", temp.str());
-
-
-
     return HadoopPipes::runTask(HadoopPipes::TemplateFactory<
                                 WordCountMapper,
                                 WordCountReducer >() );

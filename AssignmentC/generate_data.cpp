@@ -23,8 +23,7 @@ int main(int argc, char *argv[])
     double fed_rate_old, fed_rate_new, tick_value, drift_per_tick;
 
     // Setup the standard normal generator
-    //srand(time(NULL));
-    srand(0);
+    srand(time(NULL));
     std::default_random_engine generator;
     std::normal_distribution<double> standard_normal(0,1);
 
@@ -73,6 +72,5 @@ int main(int argc, char *argv[])
 
     input_data_infile.close();
     tick_data_outfile.close();
-    std::cout << "\n";
     return 0;
 }
