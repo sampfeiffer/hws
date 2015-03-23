@@ -2,12 +2,12 @@
 # Simple MPI PBS Pro batch job
 #PBS -N mpi_job
 #PBS -q production
-#PBS -l select=10:ncpus=1
+#PBS -l select=5:ncpus=1
 #PBS -l place=free
 #PBS -V
 
 cd $PBS_O_WORKDIR
 
 echo "Starting...."
-mpirun -np 10 ./mpi_mapreduce.out >  output.txt 2>&1
+mpirun -np 5 ./mpi_mapreduce.out >  output.txt 2>&1
 echo "Job is done!"
